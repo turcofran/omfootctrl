@@ -103,15 +103,15 @@ public:
   bool trackFilteredObject(Mat & threshold, Mat &cameraFeed);
   
 protected: 
+  void drawCmdAreas(Mat &frame);
+  int disable_exposure_auto_priority(const string camdev);
 
- 
 private:
  
   bool verbose;
   bool noGUI;
   boost::asio::ip::udp::endpoint guiEndpoint;
   boost::asio::ip::udp::udp::socket * socketGUI;
-  SerialPort * serial;
   CmdMap * cmap;
   cmdmap::bank * aBank;
   OSC * oscDev;

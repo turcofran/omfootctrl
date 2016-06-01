@@ -1,10 +1,3 @@
-IMPORTANT:
-Use qv4l2 to change the camera setting in order to get 30fps.
-
-      LE CAMBIE CON EL QV4L2 EL EXPOSURE, AUTO a aperture priority mode 
-      Y EL EXPOSURE, AUTO PRIORITY destildado, y anda a 30 fps!
----------------------------------------------------------------------------------
-
 Some options to get information about the camera, its modes, etc, using v4l2-ctl
 $ v4l2-ctl --list-devices
 Lenovo EasyCamera (usb-0000:00:14.0-4):
@@ -180,8 +173,10 @@ Some parameters access is not implemented on OpenCV, at least on 2.4. So, a way 
 http://stackoverflow.com/questions/15035420/configuring-camera-properties-in-new-ocv-2-4-3
 https://www.linuxtv.org/downloads/legacy/video4linux/API/V4L2_API/spec-single/v4l2.html#camera-controls
 So, I try to modify the time using the V4L2_CID_EXPOSURE_ABSOLUTE, but is not success. That is because the camera doesn't implement that control, as the cmd v4l2-ctl --all says.
-So, the solution for this camera is set the control as AUTO, but without auto priotitym which means that the frame rate must remain constant.
-       
+So, the solution for this camera is set the control as V4L2_EXPOSURE_APERTURE_PRIORITY, but without auto priotitym which means that the frame rate must remain constant. That is: 
+set V4L2_CID_EXPOSURE_AUTO as V4L2_EXPOSURE_APERTURE_PRIORITY 
+set V4L2_CID_EXPOSURE_AUTO_PRIORITY as 0 (false)
+
 
 OPENCV
 ------
@@ -198,7 +193,5 @@ TODO:
 Consider cameras with grather FPS:
 http://www.tomshardware.co.uk/forum/236517-50-good-webcam-linux
 One example is the Phillips Model SPC 900NC with has 90 fps at VGA, but seems not cheap. It uses the pwc driver. Ebay used at $149.99!
-
-Automate the camera setting. Driver conf? UDEV rule? 
 
 DEBUG flag via cmake? USE_WIN?

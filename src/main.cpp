@@ -51,7 +51,7 @@ using namespace std;
 
 int main(int ac, char* av[])
 {
-  const string cPORT = "/dev/ttyUSB0";
+  const string cCAMDEV = "/dev/video0";
   const string cDEF_OSC_SERVER_ADDR = "osc.udp://localhost:9951/";
   const int cBAUD_RATE  = 9600;
   const int cGUI_PORT  = 5151;
@@ -63,7 +63,7 @@ int main(int ac, char* av[])
   cout <<"Copyright 2016 Francisco Salomón" << endl;
   cout <<"This is free software. You are welcome to redistribute it." << endl;
 
-  string port = cPORT;
+  string camdev = cCAMDEV;
   int gui_port = cGUI_PORT;
   string osc_adress_def = cDEF_OSC_SERVER_ADDR;
   string map = cMAP_FILE;
@@ -75,7 +75,7 @@ int main(int ac, char* av[])
   desc.add_options()
     ("help,h", "Show this help")
     ("version,V", "Show version number")
-    ("in-port,p", po::value(&port), "Set input serial port")
+    ("in-camdev,c", po::value(&camdev), "Set camera dev")
     ("gui-port,g", po::value(&gui_port), "Set graphic user interface udp port")
     ("no-gui,n", "Does not notify to any graphic user interface")
     ("osc-addr,a", po::value(&osc_adress_def), "Set OSC server default address")
@@ -103,7 +103,7 @@ int main(int ac, char* av[])
   try {
     if(verbose){
       cout << "Bridge open with following parameters:" << endl;
-      cout << " - Input port: " << port << " @ " << cBAUD_RATE << endl;
+      cout << " - Input camera dev: " << camdev << endl;
       cout << " - Default OSC server address: " << osc_adress_def << endl;
       if(!noGUI){
         cout << " - GUI at UDP port: " << gui_port << endl;
@@ -111,7 +111,7 @@ int main(int ac, char* av[])
       cout << " - Commands map file: " << map << endl;
     }
     // Get  controller
-    OCVController ocv(port, cBAUD_RATE, map, noGUI, gui_port, osc_adress_def, cEXPRESSION_DIV, verbose);
+    OCVController ocv(camdev, cBAUD_RATE, map, noGUI, gui_port, osc_adress_def, cEXPRESSION_DIV, verbose);
     // Main loop
     for(;;){
       ocv.processInput();

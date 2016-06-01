@@ -7,7 +7,7 @@ set (CVOM_BIN_NAME "cvOM")
 set (CVOM_VERSION_MAJOR 1)
 set (CVOM_VERSION_MINOR 0)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -llo -lpthread -ljack") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -llo -lpthread -ljack -lv4l2") 
 
 # configure a header file to pass some of the CMake settings to the source code
 configure_file (

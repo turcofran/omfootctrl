@@ -10,7 +10,13 @@
 #include "ocvcontroller.hpp"
 #include "main_config.hpp"
 
-OCVController::OCVController(const string port, const int  baudrate,  
+#include <libv4l2.h>
+#include <linux/videodev2.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+
+
+OCVController::OCVController(const string camdev, const int  baudrate,  
                const string map, const bool nogui, const int guiport,  
                const string defoscserv, const int expressiondiv, const bool verb)  throw(ExOCVController)
 {
@@ -19,8 +25,14 @@ OCVController::OCVController(const string port, const int  baudrate,
   noGUI = noGUI;
   try
   {
+
+    // auto exposure control
+    if (disable_exposure_auto_priority(camdev) != 0)
+      throw(ExOCVController("Not possible to disable auto priority")); 
+
+
     //open capture object at location zero (default location for webcam)
-    capture.open(0);
+    capture.open(camdev);
     cb_tpoints.set_capacity(CB_CAPACITY); // =  new boost::circular_buffer<Point>(CB_CAPACITY);
 
     //set height and width of capture frame
@@ -76,7 +88,8 @@ void OCVController::processInput(void)
   } 
   //delay so that screen can refresh.
   #ifdef SHOW_WIN
-    imshow("OM OpenCV",cameraFeed);
+    imshow("OM OpenCV - feed",cameraFeed);
+    imshow("OM OpenCV - threshold",threshold);
   #endif
   //image will not appear without this waitKey() command
   waitKey(CV_DELAY_MS);
@@ -99,6 +112,11 @@ void OCVController::drawObject(int area, Point point, Mat &frame){
 
   //  putText(frame,intToString(x)+","+intToString(y)+"\n"+area,Point(x,y+30),1,1,Scalar(0,255,0),2);
   putText(frame, to_string(point.x) + ","+ to_string(point.y) + "\n" + to_string(area), Point(point.x, point.y+30), 1, 1, Scalar(0,255,0),2);
+}
+
+void OCVController::drawCmdAreas(Mat &frame){
+  line(frame, Point(0, FRAME_HEIGHT/3), Point(FRAME_WIDTH, FRAME_HEIGHT/3), Scalar(0,255,0),2);
+  line(frame, Point(0, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(0,255,0),2);
 }
 
 void OCVController::morphOps(Mat &thresh){
@@ -154,6 +172,7 @@ bool OCVController::trackFilteredObject(Mat &threshold, Mat &cameraFeed){
            * 4- Levantar inhibicion y arrancar de nuevo a evaluar
            */
           #ifdef SHOW_WIN
+            drawCmdAreas(threshold);
             drawObject(area, lastPoint, cameraFeed);
           #endif          
           // 
@@ -186,3 +205,22 @@ bool OCVController::trackFilteredObject(Mat &threshold, Mat &cameraFeed){
   }
 }
 
+
+int OCVController::disable_exposure_auto_priority(const string camdev) 
+{
+  int descriptor = v4l2_open(camdev.c_str(), O_RDWR);
+
+  v4l2_control c;   // auto exposure control to aperture priority 
+  c.id = V4L2_CID_EXPOSURE_AUTO;
+  c.value = V4L2_EXPOSURE_APERTURE_PRIORITY; 
+  if (v4l2_ioctl(descriptor, VIDIOC_S_CTRL, &c)!=0)
+    return -1;
+  
+  c.id = V4L2_CID_EXPOSURE_AUTO_PRIORITY; // auto priority control to false
+  c.value = 0;
+  if (v4l2_ioctl(descriptor, VIDIOC_S_CTRL, &c)!=0)
+    return -1;
+  
+  v4l2_close(descriptor);
+  return 0;
+}
