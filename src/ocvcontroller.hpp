@@ -59,14 +59,17 @@ const int V_MAX = 256;
 const int FRAME_WIDTH = 640/2;
 const int FRAME_HEIGHT = 480/2;
 //max number of objects to be detected in frame
-const int MAX_NUM_OBJECTS=2;
+const int MAX_NUM_OBJECTS=1;
 //delay between frames, in ms
+const int DEF_FRAME_INT_US=33333;
+const int DEBOUNCE_TIME_MS=500;
 const int CV_DELAY_MS=1;
 //Circular buffer CAPACITY
 const int CB_CAPACITY=10;
 const int ERODE_RECT_PIXEL=8;
 const int DILATE_RECT_PIXEL=16;
 const int ERODE_DILATE_ITS=2;
+const bool DEBUB_TICS=false;
 //minimum and maximum object area
 const int MIN_OBJECT_AREA = 20*20;
 const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
@@ -81,6 +84,8 @@ const list<cmdmap::argument> RECORD_ARGLIST = {RECORD_ARG};
 const list<unsigned int> RECORD_DATABYTESLIST = {0};
 
 const cmdmap::command RECORD_CMD{"record", "osc", '1', "", "record", RECORD_ARGLIST, RECORD_DATABYTESLIST};
+
+enum class TrackStt { NO_TRACK, UNARMED, ARMED, DEBOUNCING, TRIGGER, EXPRESSION};
 
 //exceptions for OCVController
 class ExOCVController: public exception
@@ -116,6 +121,7 @@ public:
 protected: 
   void drawCmdAreas(Mat &frame);
   int disable_exposure_auto_priority(const int dev);
+  int read_frame_interval_us(const int dev);
 
 private:
  
@@ -131,6 +137,9 @@ private:
   // OpenCV realted objects
   VideoCapture videoCap;
   VideoWriter  videoOut;
+  int debouceFrames, debounceCounter;
+  int frameIntervalUS;
+  TrackStt trackState;
 
   // Canvas matrix
   //~ Mat canvas;

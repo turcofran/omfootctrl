@@ -26,14 +26,21 @@ OCVController::OCVController(const int camdev, const int  baudrate,
   noGUI = noGUI;
   try
   {
-
     // Initialize structuring elements for morphological operations
     morphERODE  = getStructuringElement( MORPH_RECT, Size(ERODE_RECT_PIXEL,ERODE_RECT_PIXEL));
     morphDILATE = getStructuringElement( MORPH_RECT, Size(DILATE_RECT_PIXEL,DILATE_RECT_PIXEL));
-
+    trackState = TrackStt::NO_TRACK;
     // auto exposure control
     if (disable_exposure_auto_priority(camdev) != 0)
       throw(ExOCVController("Not possible to disable auto priority")); 
+    // TODO implement reading the fps
+    int frameIntervalUS = read_frame_interval_us(camdev);
+    if (frameIntervalUS == -1) {
+      cerr << "Not possible to read the frame interval from device " << ". Default value will be used: " << DEF_FRAME_INT_US << endl;
+      frameIntervalUS = DEF_FRAME_INT_US;
+    }
+    debouceFrames = (int)((double)DEBOUNCE_TIME_MS*1000/(double)frameIntervalUS);
+    debounceCounter = 0;
     
     // open video to write
     //~ videoOut.open("sample.raw", CV_FOURCC('V','P','8','0'), 30.0, Size(FRAME_HEIGHT, FRAME_WIDTH), true);
@@ -118,9 +125,11 @@ void OCVController::processInput(void)
   //image will not appear without this waitKey() command
   waitKey(CV_DELAY_MS);
   auto tic3 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
-  cout << "processInput: " << tic1.count() << " - " << tic2.count()<< " - " << tic3.count()<< endl;
+  if (DEBUB_TICS)
+    cout << "processInput: " << tic1.count() << " - " << tic2.count()<< " - " << tic3.count()<< endl;
 }
 
+// TODO set the color in function to the state
 void OCVController::drawObject(int area, Point point, Mat &frame){
   //use some of the openCV drawing functions to draw crosshairs on your tracked image!
   circle(frame,point,4,Scalar(0,255,0),-1);
@@ -137,8 +146,8 @@ void OCVController::drawObject(int area, Point point, Mat &frame){
   //~ if(point.x+25<FRAME_WIDTH) line(frame, point, Point(point.x+25, point.y), Scalar(0,255,0),2);
   //~ else line(frame, point, Point(FRAME_WIDTH, point.y), Scalar(0,255,0),2);
 //~ 
-  //~ //  putText(frame,intToString(x)+","+intToString(y)+"\n"+area,Point(x,y+30),1,1,Scalar(0,255,0),2);
-  putText(frame, to_string(point.x) + ","+ to_string(point.y) + "\n" + to_string(area), Point(point.x, point.y+30), 1, 1, Scalar(0,255,0),2);
+  putText(frame, to_string(point.x) + ","+ to_string(point.y) + "\n" + to_string(area), 
+          Point(point.x, point.y+30), 1, 1, Scalar(0,255,0),2);  
 }
 
 
@@ -177,66 +186,80 @@ bool OCVController::trackAndEval(Mat &threshold, Mat &canvas){
   findContours(temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
   //use moments method to find our filtered object
   bool retValue = false;
-  double refArea = 0;
   double area;
-  bool objectFound = false;
   int numObjects = hierarchy.size();
+  if (debounceCounter) debounceCounter--;
   if (numObjects > 0) {
     //if number of objects greater than MAX_NUM_OBJECTS we have a noisy filter
-    if (numObjects<MAX_NUM_OBJECTS){
-      for (int index = 0; index >= 0; index = hierarchy[index][0]) {
-        Moments moment = moments((Mat)contours[index]);
-        area = moment.m00;
-        //if the area is less than 20 px by 20px then it is probably just noise
-        //if the area is the same as the 3/2 of the image size, probably just a bad filter
-        //we only want the object with the largest area so we safe a reference area each
-        //iteration and compare it to the area in the next iteration.
-        if (area>MIN_OBJECT_AREA && area<MAX_OBJECT_AREA && area>refArea){ // TODO Evaluate this restictions
-          Point lastPoint(
-            moment.m10/area, // x
-            moment.m01/area  // y
-          );
-          objectFound = true;
-          refArea = area;
-          cb_tpoints.push_back(lastPoint);
-          /* TODO 
-           * 1- Llenar un buffer con info de los últimos puntos trackeados.
-           * 2- Analizar la info en cada pasada: Cuantos puntos válidos hay? Hubo movimiento? Filtrar algo?
-           * 3- Si hubo movimiento, retornar true, setear un inhibicion despues de detectar evento. Timer? 
-           * 4- Levantar inhibicion y arrancar de nuevo a evaluar
-           */
-          #ifdef SHOW_WIN
-            //~ drawCmdAreas(threshold);
-            drawObject(area, lastPoint, canvas);
-          #endif          
-          // 
-          // !!!!!!!!!!       TODO ver phase corr !!!! puede ser la solución, analizando dos thresholdeadas!!!!!!!!!!
-          // 
-          if (cb_tpoints.full()) {
-            // analize expresion!
-            // dtf() <- how to analize that! remember is an array of points!
-            // http://docs.opencv.org/2.4/modules/imgproc/doc/motion_analysis_and_object_tracking.html
-            vector<double> speed;
-            //cout << "HOla, llene el buffer" << endl;
-            for (int i=1; i<CB_CAPACITY; i++) {
-              //speed.push_back(());
-            }
-            //~ if () {
-              //~ cb_tpoints.clear(); // reset buffer
-              //~ retValue = true;
-            //~ }
+    if (numObjects==1){
+      Moments moment = moments((Mat)contours[0]);
+      area = moment.m00;
+      Point lastPoint(
+        moment.m10/area, // x
+        moment.m01/area  // y
+      );
+      #ifdef SHOW_WIN
+        drawObject(area, lastPoint, canvas);
+      #endif 
+      // Evaluate in which position of the grid the point is
+      // state machine
+      // TOD CHECH bounding rectangles and contour to check the area!!!!
+      switch (trackState) {
+        case TrackStt::NO_TRACK:
+        case TrackStt::UNARMED:
+          if (lastPoint.x < FRAME_WIDTH/4) {
+            trackState = TrackStt::EXPRESSION;
+            cout << "Next state TrackStt::EXPRESSION" << endl; 
           }
-        }
-        else 
-          cb_tpoints.clear(); // reset buffer
-      }
+          else if (lastPoint.y < 2*FRAME_HEIGHT/3) {
+            trackState = TrackStt::ARMED;
+            cout << "Next state TrackStt::ARMED" << endl;
+          }
+          else {
+            trackState = TrackStt::UNARMED;
+          }
+          break;
+        case TrackStt::ARMED:
+          if (lastPoint.x < FRAME_WIDTH/4) {
+            trackState = TrackStt::EXPRESSION;
+          }
+          else if (lastPoint.y > 2*FRAME_HEIGHT/3) {
+            trackState = TrackStt::DEBOUNCING;
+            debounceCounter = debouceFrames;
+            if (lastPoint.x < 2*FRAME_WIDTH/4) {
+              cout << "A" << endl; 
+            }
+            else if (lastPoint.x < 3*FRAME_WIDTH/4) {
+              cout << "B" << endl; 
+            }
+            else {
+              cout << "C" << endl; 
+            }
+          }
+          break;
+        case TrackStt::DEBOUNCING: 
+          cout << "DEBOUNCING" << endl; 
+          if (debounceCounter==0) 
+            trackState = TrackStt::UNARMED;
+          break;
+        case TrackStt::EXPRESSION: 
+          if (lastPoint.x > FRAME_WIDTH/4) {
+              trackState = TrackStt::UNARMED;
+          }
+          break;
+        default: 
+          break;
+      } 
+      return retValue;
     }
     else {
-      cb_tpoints.clear();
-      putText(canvas,"TOO MUCH NOISE! ADJUST FILTER",Point(0,50),1,2,Scalar(0,0,255),2);
+      trackState = TrackStt::NO_TRACK;
+      //void putText(Mat& img, const string& text, Point org, int fontFace, double fontScale, Scalar color, int thickness=1, int lineType=8, bool bottomLeftOrigin=false )
+      putText(canvas, "More than one object detected!", Point(2, FRAME_HEIGHT-10), 1, 0.5, Scalar(0,0,255), 1);
     }
-    return retValue;
   }
+  trackState = TrackStt::NO_TRACK;
+  return retValue;
 }
 
 
@@ -259,3 +282,9 @@ int OCVController::disable_exposure_auto_priority(const int dev)
   v4l2_close(descriptor);
   return 0;
 }
+
+int OCVController::read_frame_interval_us(const int dev)
+{
+  return -1;
+}
+
