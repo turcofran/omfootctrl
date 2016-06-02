@@ -51,7 +51,7 @@ using namespace std;
 
 int main(int ac, char* av[])
 {
-  const string cCAMDEV = "/dev/video0";
+  const int cCAMDEV = 0;
   const string cDEF_OSC_SERVER_ADDR = "osc.udp://localhost:9951/";
   const int cBAUD_RATE  = 9600;
   const int cGUI_PORT  = 5151;
@@ -59,11 +59,11 @@ int main(int ac, char* av[])
   const string cMAP_FILE = "../maps/map.xml";
   const int cEXPRESSION_DIV = 12;
   
-  cout <<"OM Controller with OpenCV" << CVOM_VERSION_MAJOR << endl;
-  cout <<"Copyright 2016 Francisco Salomón" << endl;
+  cout <<"OM Controller with OpenCV " << CVOM_VERSION_MAJOR << "." << CVOM_VERSION_MINOR << endl;
+  cout <<"Copyright 2016 Francisco Salomon" << endl;
   cout <<"This is free software. You are welcome to redistribute it." << endl;
 
-  string camdev = cCAMDEV;
+  int camdev = cCAMDEV;
   int gui_port = cGUI_PORT;
   string osc_adress_def = cDEF_OSC_SERVER_ADDR;
   string map = cMAP_FILE;
@@ -75,7 +75,7 @@ int main(int ac, char* av[])
   desc.add_options()
     ("help,h", "Show this help")
     ("version,V", "Show version number")
-    ("in-camdev,c", po::value(&camdev), "Set camera dev")
+    ("in-camdev,d", po::value(&camdev), "Set camera device number")
     ("gui-port,g", po::value(&gui_port), "Set graphic user interface udp port")
     ("no-gui,n", "Does not notify to any graphic user interface")
     ("osc-addr,a", po::value(&osc_adress_def), "Set OSC server default address")

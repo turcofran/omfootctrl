@@ -41,12 +41,20 @@ using namespace cv;
 
 // TODO set at calibration stage
 // HSV limits 
+// Paper
 const int H_MIN = 95;
 const int H_MAX = 128;
 const int S_MIN = 180;
 const int S_MAX = 256;
 const int V_MIN = 60;
 const int V_MAX = 256;
+// Card
+//~ const int H_MIN = 85;
+//~ const int H_MAX = 128;
+//~ const int S_MIN = 109;
+//~ const int S_MAX = 256;
+//~ const int V_MIN = 166;
+//~ const int V_MAX = 256;
 //default capture width and height
 const int FRAME_WIDTH = 640/2;
 const int FRAME_HEIGHT = 480/2;
@@ -56,6 +64,9 @@ const int MAX_NUM_OBJECTS=2;
 const int CV_DELAY_MS=1;
 //Circular buffer CAPACITY
 const int CB_CAPACITY=10;
+const int ERODE_RECT_PIXEL=8;
+const int DILATE_RECT_PIXEL=16;
+const int ERODE_DILATE_ITS=2;
 //minimum and maximum object area
 const int MIN_OBJECT_AREA = 20*20;
 const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
@@ -89,7 +100,7 @@ class OCVController
 {  
   
 public:
-  OCVController(const string port, const int  baudrate,  
+  OCVController(const int camdev, const int  baudrate,  
                const string map, const bool nogui, const int guiport,  
                const string defoscserv, const int expressiondiv, const bool verb)  throw(ExOCVController);  
   void processInput(void);
@@ -98,13 +109,13 @@ public:
 
   void drawObject(int area, Point point, Mat &frame);
 
-  void morphOps(Mat &thresh);
+  void erodeAndDilate(Mat &frame);
   
-  bool trackFilteredObject(Mat & threshold, Mat &cameraFeed);
+  bool trackAndEval(Mat & threshold, Mat &canvas);
   
 protected: 
   void drawCmdAreas(Mat &frame);
-  int disable_exposure_auto_priority(const string camdev);
+  int disable_exposure_auto_priority(const int dev);
 
 private:
  
@@ -118,13 +129,13 @@ private:
   MIDI * midiDev;
   
   // OpenCV realted objects
-  Mat cameraFeed;
-  //matrix storage for HSV image
-  Mat HSV;
-  //matrix storage for binary threshold image
-  Mat threshold;
-  //video capture object to acquire webcam feed
-  VideoCapture capture;
+  VideoCapture videoCap;
+  VideoWriter  videoOut;
+
+  // Canvas matrix
+  //~ Mat canvas;
+  // Structuring elements for morphological operations
+  Mat morphERODE, morphDILATE;
   //x and y values for the location of the object
   int x=0, y=0;
   // Circular buffer for the tracked points

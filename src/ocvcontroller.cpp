@@ -15,8 +15,9 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 
+#include <chrono>
 
-OCVController::OCVController(const string camdev, const int  baudrate,  
+OCVController::OCVController(const int camdev, const int  baudrate,  
                const string map, const bool nogui, const int guiport,  
                const string defoscserv, const int expressiondiv, const bool verb)  throw(ExOCVController)
 {
@@ -26,18 +27,27 @@ OCVController::OCVController(const string camdev, const int  baudrate,
   try
   {
 
+    // Initialize structuring elements for morphological operations
+    morphERODE  = getStructuringElement( MORPH_RECT, Size(ERODE_RECT_PIXEL,ERODE_RECT_PIXEL));
+    morphDILATE = getStructuringElement( MORPH_RECT, Size(DILATE_RECT_PIXEL,DILATE_RECT_PIXEL));
+
     // auto exposure control
     if (disable_exposure_auto_priority(camdev) != 0)
       throw(ExOCVController("Not possible to disable auto priority")); 
-
+    
+    // open video to write
+    //~ videoOut.open("sample.raw", CV_FOURCC('V','P','8','0'), 30.0, Size(FRAME_HEIGHT, FRAME_WIDTH), true);
+    videoOut.open("sample.avi", 0,  30.0, Size(FRAME_WIDTH, FRAME_HEIGHT));
+    if (!videoOut.isOpened())
+      throw(ExOCVController("Not possible to open write video")); 
 
     //open capture object at location zero (default location for webcam)
-    capture.open(camdev);
+    videoCap.open(camdev);
     cb_tpoints.set_capacity(CB_CAPACITY); // =  new boost::circular_buffer<Point>(CB_CAPACITY);
 
     //set height and width of capture frame
-    capture.set(CV_CAP_PROP_FRAME_WIDTH,FRAME_WIDTH);
-    capture.set(CV_CAP_PROP_FRAME_HEIGHT,FRAME_HEIGHT);
+    videoCap.set(CV_CAP_PROP_FRAME_WIDTH,FRAME_WIDTH);
+    videoCap.set(CV_CAP_PROP_FRAME_HEIGHT,FRAME_HEIGHT);
     // Get commnds map and its iterator       
     cmap = new CmdMap(map);
     aBank = cmap->getFirstBank(); 
@@ -64,20 +74,32 @@ OCVController::OCVController(const string camdev, const int  baudrate,
 // Process input method
 void OCVController::processInput(void)
 {
+  auto start = chrono::steady_clock::now();
   bool sendExpression2GUI = false;
-  //store image to matrix
-  // TODO read return value
-  capture.read(cameraFeed);
+  Mat camFeed, procHSV, procThreshold;
+  //~ Mat canvas(FRAME_HEIGHT, FRAME_WIDTH, CV_8U); 
+  Mat canvas = Mat::zeros(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
+    // Get commnds map and it
+  if (!videoCap.read(camFeed)) {
+    cerr << "VideoCapture is not reading" << endl;
+    return;
+  }
+  auto tic1 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
+  //flip image
+  flip(camFeed, camFeed, 1);
+  //videoOut.write(camFeed);
   //convert frame from BGR to HSV colorspace
-  cvtColor(cameraFeed,HSV,COLOR_BGR2HSV);
+  cvtColor(camFeed, procHSV, COLOR_BGR2HSV);
   //filter HSV image between values and store filtered image to threshold matrix
-  inRange(HSV,Scalar(H_MIN,S_MIN,V_MIN),Scalar(H_MAX,S_MAX,V_MAX),threshold);
+  inRange(procHSV,Scalar(H_MIN,S_MIN,V_MIN),Scalar(H_MAX,S_MAX,V_MAX),procThreshold);
   //perform morphological operations on thresholded image to eliminate noise and emphasize the filtered object(s)
-  morphOps(threshold);
+  erodeAndDilate(procThreshold);
   //pass in thresholded frame to our object tracking function
   //this function will return the x and y coordinates of the
   //filtered object
-  if (trackFilteredObject(threshold, cameraFeed)) {
+  auto tic2 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
+    
+  if (trackAndEval(procThreshold, canvas)) {
     try {
       // OSC command
       if(verbose) cout << "Send OSC command: " << RECORD_CMD.name << endl;
@@ -88,59 +110,71 @@ void OCVController::processInput(void)
   } 
   //delay so that screen can refresh.
   #ifdef SHOW_WIN
-    imshow("OM OpenCV - feed",cameraFeed);
-    imshow("OM OpenCV - threshold",threshold);
+    imshow("OM OpenCV - feed", camFeed);
+    imshow("OM OpenCV - threshold", procThreshold);
   #endif
+  drawCmdAreas(canvas);
+  imshow("OM OpenCV - Canvas", canvas);
   //image will not appear without this waitKey() command
   waitKey(CV_DELAY_MS);
+  auto tic3 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
+  cout << "processInput: " << tic1.count() << " - " << tic2.count()<< " - " << tic3.count()<< endl;
 }
 
 void OCVController::drawObject(int area, Point point, Mat &frame){
   //use some of the openCV drawing functions to draw crosshairs on your tracked image!
-  circle(frame,point,20,Scalar(0,255,0),2);
-  if(point.y-25>0) line(frame, point, Point(point.x,point.y-25), Scalar(0,255,0),2);
-  else line(frame, point, Point(point.x, 0), Scalar(0,255,0),2);
-  
-  if(point.y+25<FRAME_HEIGHT) line(frame, point, Point(point.x, point.y+25), Scalar(0,255,0),2);
-  else line(frame, point, Point(x, FRAME_HEIGHT), Scalar(0,255,0),2);
-  
-  if(point.x-25>0) line(frame, point, Point(point.x-25,point.y), Scalar(0,255,0),2);
-  else line(frame, point, Point(0,point.y), Scalar(0,255,0),2);
-  
-  if(point.x+25<FRAME_WIDTH) line(frame, point, Point(point.x+25, point.y), Scalar(0,255,0),2);
-  else line(frame, point, Point(FRAME_WIDTH, point.y), Scalar(0,255,0),2);
-
-  //  putText(frame,intToString(x)+","+intToString(y)+"\n"+area,Point(x,y+30),1,1,Scalar(0,255,0),2);
+  circle(frame,point,4,Scalar(0,255,0),-1);
+  //circle(frame,Point(x,y),20,Scalar(0,255,0),2);
+  //~ if(point.y-25>0) line(frame, point, Point(point.x,point.y-25), Scalar(0,255,0),2);
+  //~ else line(frame, point, Point(point.x, 0), Scalar(0,255,0),2);
+  //~ 
+  //~ if(point.y+25<FRAME_HEIGHT) line(frame, point, Point(point.x, point.y+25), Scalar(0,255,0),2);
+  //~ else line(frame, point, Point(x, FRAME_HEIGHT), Scalar(0,255,0),2);
+  //~ 
+  //~ if(point.x-25>0) line(frame, point, Point(point.x-25,point.y), Scalar(0,255,0),2);
+  //~ else line(frame, point, Point(0,point.y), Scalar(0,255,0),2);
+  //~ 
+  //~ if(point.x+25<FRAME_WIDTH) line(frame, point, Point(point.x+25, point.y), Scalar(0,255,0),2);
+  //~ else line(frame, point, Point(FRAME_WIDTH, point.y), Scalar(0,255,0),2);
+//~ 
+  //~ //  putText(frame,intToString(x)+","+intToString(y)+"\n"+area,Point(x,y+30),1,1,Scalar(0,255,0),2);
   putText(frame, to_string(point.x) + ","+ to_string(point.y) + "\n" + to_string(area), Point(point.x, point.y+30), 1, 1, Scalar(0,255,0),2);
 }
 
+
 void OCVController::drawCmdAreas(Mat &frame){
-  line(frame, Point(0, FRAME_HEIGHT/3), Point(FRAME_WIDTH, FRAME_HEIGHT/3), Scalar(0,255,0),2);
-  line(frame, Point(0, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(0,255,0),2);
-}
+  //~ line(frame, Point(0, FRAME_HEIGHT/3), Point(FRAME_WIDTH, FRAME_HEIGHT/3), Scalar(255,255,0),2);
+  //~ line(frame, Point(0, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(255,255,0),2);
 
-void OCVController::morphOps(Mat &thresh){
-  //create structuring element that will be used to "dilate" and "erode" image.
-  //the element chosen here is a 3px by 3px rectangle
-  Mat erodeElement = getStructuringElement( MORPH_RECT, Size(3,3));
-  //dilate with larger element so make sure object is nicely visible
-  Mat dilateElement = getStructuringElement( MORPH_RECT, Size(8,8));
-  erode(thresh,thresh,erodeElement);
-  erode(thresh,thresh,erodeElement);
-  dilate(thresh,thresh,dilateElement);
-  dilate(thresh,thresh,dilateElement);
-  //TODO maybe a blur filter is faster than this...
+  // Middle line
+  line(frame, Point(FRAME_WIDTH/4, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(255,255,0),2);
+  // A
+  line(frame, Point(2*FRAME_WIDTH/4, 2*FRAME_HEIGHT/3), Point(2*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
+  // B
+  line(frame, Point(3*FRAME_WIDTH/4, 2*FRAME_HEIGHT/3), Point(3*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
+  
+  // Expression line
+  line(frame, Point(FRAME_WIDTH/4, 0), Point(FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
 }
 
 
-bool OCVController::trackFilteredObject(Mat &threshold, Mat &cameraFeed){
+void OCVController::erodeAndDilate(Mat &frame){
+  erode(frame, frame, morphERODE, Point(-1,-1), ERODE_DILATE_ITS);
+  //~ erode(procThreshold, procThreshold, erodeElement);
+  //~ dilate(procThreshold, procThreshold, dilateElement);
+  dilate(frame, frame, morphDILATE, Point(-1,-1), ERODE_DILATE_ITS);
+  //TODO maybe a blur filter is faster than this... medianBLur?
+}
+
+
+bool OCVController::trackAndEval(Mat &threshold, Mat &canvas){
   Mat temp;
   threshold.copyTo(temp);
   //these two vectors needed for output of findContours
   vector< vector<Point> > contours;
   vector<Vec4i> hierarchy;
   //find contours of filtered image using openCV findContours function
-  findContours(temp,contours,hierarchy,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE );
+  findContours(temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
   //use moments method to find our filtered object
   bool retValue = false;
   double refArea = 0;
@@ -172,8 +206,8 @@ bool OCVController::trackFilteredObject(Mat &threshold, Mat &cameraFeed){
            * 4- Levantar inhibicion y arrancar de nuevo a evaluar
            */
           #ifdef SHOW_WIN
-            drawCmdAreas(threshold);
-            drawObject(area, lastPoint, cameraFeed);
+            //~ drawCmdAreas(threshold);
+            drawObject(area, lastPoint, canvas);
           #endif          
           // 
           // !!!!!!!!!!       TODO ver phase corr !!!! puede ser la solución, analizando dos thresholdeadas!!!!!!!!!!
@@ -199,15 +233,16 @@ bool OCVController::trackFilteredObject(Mat &threshold, Mat &cameraFeed){
     }
     else {
       cb_tpoints.clear();
-      putText(cameraFeed,"TOO MUCH NOISE! ADJUST FILTER",Point(0,50),1,2,Scalar(0,0,255),2);
+      putText(canvas,"TOO MUCH NOISE! ADJUST FILTER",Point(0,50),1,2,Scalar(0,0,255),2);
     }
     return retValue;
   }
 }
 
 
-int OCVController::disable_exposure_auto_priority(const string camdev) 
+int OCVController::disable_exposure_auto_priority(const int dev) 
 {
+  string camdev = "/dev/video" + to_string(dev);
   int descriptor = v4l2_open(camdev.c_str(), O_RDWR);
 
   v4l2_control c;   // auto exposure control to aperture priority 

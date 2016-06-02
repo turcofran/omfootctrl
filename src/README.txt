@@ -188,6 +188,15 @@ FPS
 With this camera (and maybe with this kind of sensors), the maximum FPS is 30fps, 33ms. And the delay of the read method is that... 
 
 
+FOOTS
+-----
+Maybe could be useful to detect the feet movement! So, I need other webcam.
+From Argos:
+* HP 2300 HD: 20 GBP, it says 30fps
+* Trust Primo Webcam: £ 9.99, nobody says a word about the fps
+Mhh, this is not a super webcam. To spend this, I will get something fasters...
+
+
 TODO:
 ----
 Consider cameras with grather FPS:
