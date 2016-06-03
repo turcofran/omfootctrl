@@ -59,6 +59,11 @@ const int V_MAX = 256;
 //default capture width and height
 const int FRAME_WIDTH = 640/2;
 const int FRAME_HEIGHT = 480/2;
+// expression limits
+const int EXP_VER_LOW = FRAME_HEIGHT/4;
+const int EXP_VER_HIGH = 5*FRAME_HEIGHT/6;
+const int EXP_VER_RANGE = EXP_VER_HIGH-EXP_VER_LOW;
+const int EXP_HORI_LIMIT = FRAME_WIDTH/4;
 //max number of objects to be detected in frame
 const int MAX_NUM_OBJECTS=1;
 //delay between frames, in ms

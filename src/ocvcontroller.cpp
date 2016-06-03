@@ -181,8 +181,10 @@ void OCVController::drawCmdAreas(Mat &frame){
   // B
   line(frame, Point(3*FRAME_WIDTH/4, 2*FRAME_HEIGHT/3), Point(3*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
   
-  // Expression line
-  line(frame, Point(FRAME_WIDTH/4, 0), Point(FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
+  // Expression lines
+  line(frame, Point(EXP_HORI_LIMIT, 0), Point(EXP_HORI_LIMIT, FRAME_HEIGHT), Scalar(255,255,0),2);
+  line(frame, Point(0, EXP_VER_LOW), Point(EXP_HORI_LIMIT, EXP_VER_LOW), Scalar(255,255,0),2);
+  line(frame, Point(0, EXP_VER_HIGH), Point(EXP_HORI_LIMIT, EXP_VER_HIGH), Scalar(255,255,0),2);
 }
 
 
@@ -226,7 +228,7 @@ string OCVController::trackAndEval(Mat &threshold, Mat &canvas){
       switch (trackState) {
         case TrackStt::NO_TRACK:
         case TrackStt::UNARMED:
-          if (lastPoint.x < FRAME_WIDTH/4) {
+          if (lastPoint.x < EXP_HORI_LIMIT) {
             trackState = TrackStt::EXPRESSION;
             cout << "Next state TrackStt::EXPRESSION" << endl; 
           }
@@ -239,7 +241,7 @@ string OCVController::trackAndEval(Mat &threshold, Mat &canvas){
           }
           break;
         case TrackStt::ARMED:
-          if (lastPoint.x < FRAME_WIDTH/4) {
+          if (lastPoint.x < EXP_HORI_LIMIT) {
             trackState = TrackStt::EXPRESSION;
           }
           else if (lastPoint.y > 2*FRAME_HEIGHT/3) {
@@ -265,14 +267,20 @@ string OCVController::trackAndEval(Mat &threshold, Mat &canvas){
             trackState = TrackStt::UNARMED;
           break;
         case TrackStt::EXPRESSION: 
-          if (lastPoint.x > FRAME_WIDTH/4) {
+          if (lastPoint.x > EXP_HORI_LIMIT) {
               trackState = TrackStt::UNARMED;
           }
-          else{ // The expression region is just the last 75% of the height
-            int expLevel = (int)((double)expressionDiv*(1.0 - (double)lastPoint.y/(double)FRAME_HEIGHT));
+          else{ 
+            int expLevel;
+            if (lastPoint.y > EXP_VER_HIGH) 
+              expLevel = 0;
+            else if (lastPoint.y < EXP_VER_LOW)
+              expLevel = expressionDiv;
+            else {
+              float ylevel = (float)(lastPoint.y-EXP_VER_LOW)/(float)(EXP_VER_RANGE);
+              expLevel = (int)((float)expressionDiv*(1.0 - ylevel));
+            }
             cout << "Expression level:" << expLevel << endl; 
-            //~ if (lastPoint.y<FRAME_HEIGHT/4) expLevel = expressionDiv;
-            //~ else expLevel = (3*FRAME_HEIGHT/4)expressionDiv
             retValue = "X"+to_string(expLevel);
           }
           break;
