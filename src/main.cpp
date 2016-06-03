@@ -56,7 +56,7 @@ int main(int ac, char* av[])
   const int cBAUD_RATE  = 9600;
   const int cGUI_PORT  = 5151;
   //~ const string cVERSION = "v1.0.0";
-  const string cMAP_FILE = "../maps/map.xml";
+  const string cMAP_FILE = "../maps/map_expression.xml"; //"../maps/map.xml";
   const int cEXPRESSION_DIV = 12;
   
   cout <<"OM Controller with OpenCV " << CVOM_VERSION_MAJOR << "." << CVOM_VERSION_MINOR << endl;
@@ -68,7 +68,7 @@ int main(int ac, char* av[])
   string osc_adress_def = cDEF_OSC_SERVER_ADDR;
   string map = cMAP_FILE;
   bool verbose = false;
-  bool noGUI = false;
+  bool noGUI = true;
     
   namespace po = boost::program_options;
   po::options_description desc("Options for OM Controller with OpenCV");

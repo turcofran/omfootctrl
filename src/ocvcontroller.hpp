@@ -43,10 +43,11 @@ using namespace cv;
 // HSV limits 
 // Paper
 const int H_MIN = 95;
-const int H_MAX = 128;
 const int S_MIN = 180;
+const int V_MIN = 0;
+
+const int H_MAX = 128;
 const int S_MAX = 256;
-const int V_MIN = 60;
 const int V_MAX = 256;
 // Card
 //~ const int H_MIN = 85;
@@ -66,18 +67,17 @@ const int DEBOUNCE_TIME_MS=500;
 const int CV_DELAY_MS=1;
 //Circular buffer CAPACITY
 const int CB_CAPACITY=10;
-const int ERODE_RECT_PIXEL=8;
-const int DILATE_RECT_PIXEL=16;
+const int ERODE_RECT_PIXEL=4;
+const int DILATE_RECT_PIXEL=8;
 const int ERODE_DILATE_ITS=2;
 const bool DEBUB_TICS=false;
 //minimum and maximum object area
 const int MIN_OBJECT_AREA = 20*20;
 const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
 //names that will appear at the top of each window
-const string W_NAME_ORIG = "Original Image";
-const string W_NAME_HSV = "HSV Image";
+const string W_NAME_FEED = "OM OpenCV - Feed";
 const string W_NAME_THRESHOLD = "Thresholded Image";
-const string W_NAME_AFTERMORPHO = "After Morphological Operations";
+const string W_NAME_CANVAS = "OM OpenCV - Canvas";
 
 const cmdmap::argument RECORD_ARG{'s', false, 0.0, 0.0, "record"};
 const list<cmdmap::argument> RECORD_ARGLIST = {RECORD_ARG};
@@ -105,7 +105,7 @@ class OCVController
 {  
   
 public:
-  OCVController(const int camdev, const int  baudrate,  
+  OCVController(const int incamdev, const int  baudrate,  
                const string map, const bool nogui, const int guiport,  
                const string defoscserv, const int expressiondiv, const bool verb)  throw(ExOCVController);  
   void processInput(void);
@@ -116,12 +116,15 @@ public:
 
   void erodeAndDilate(Mat &frame);
   
-  bool trackAndEval(Mat & threshold, Mat &canvas);
+  string trackAndEval(Mat & threshold, Mat &canvas);
   
 protected: 
   void drawCmdAreas(Mat &frame);
   int disable_exposure_auto_priority(const int dev);
+  int disable_exposure_auto_priority(const string dev);
   int read_frame_interval_us(const int dev);
+  int read_frame_interval_us(VideoCapture cap);
+  void processCmd(const string arrivedCmd);
 
 private:
  
@@ -133,6 +136,7 @@ private:
   cmdmap::bank * aBank;
   OSC * oscDev;
   MIDI * midiDev;
+  int expressionDiv;
   
   // OpenCV realted objects
   VideoCapture videoCap;
@@ -148,7 +152,7 @@ private:
   //x and y values for the location of the object
   int x=0, y=0;
   // Circular buffer for the tracked points
-  boost::circular_buffer<Point> cb_tpoints; //(CB_CAPACITY);
+  //~ boost::circular_buffer<Point> cb_tpoints; //(CB_CAPACITY);
 
 };
 

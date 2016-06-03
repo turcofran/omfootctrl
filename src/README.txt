@@ -182,6 +182,15 @@ OPENCV
 ------
 The VideoCapture::read() method includes other two methods, the grab() and release().
 
+COLOR OF THE POINTER
+---------------------
+The pointer or object to be tracked correspond to a color.
+The HSV filter used depends on the color, the light, the reflexion of the material and its possition, etc. 
+The following link gives the HSV representation: http://colorizer.org/
+This other link explains a bit more about tracking: http://docs.opencv.org/master/df/d9d/tutorial_py_colorspaces.html#gsc.tab=0
+In terms of the HSV representation, OpenCV uses the following ranges:
+    For HSV, Hue range is [0,179], Saturation range is [0,255] and Value range is [0,255]. Different softwares use different scales.
+So if you are comparing OpenCV values with them, you need to normalize these ranges.
 
 FPS
 ---
