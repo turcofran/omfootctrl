@@ -56,6 +56,7 @@ const int V_MAX = 256;
 //~ const int S_MAX = 256;
 //~ const int V_MIN = 166;
 //~ const int V_MAX = 256;
+// Window Layout
 //default capture width and height
 const int FRAME_WIDTH = 640/2;
 const int FRAME_HEIGHT = 480/2;
@@ -64,6 +65,9 @@ const int EXP_VER_LOW = FRAME_HEIGHT/4;
 const int EXP_VER_HIGH = 5*FRAME_HEIGHT/6;
 const int EXP_VER_RANGE = EXP_VER_HIGH-EXP_VER_LOW;
 const int EXP_HORI_LIMIT = FRAME_WIDTH/4;
+// Buttons limits
+const int BBUTT_VER_LIMIT = 2*FRAME_HEIGHT/3; // bottom
+const int TBUTT_VER_LIMIT = 1*FRAME_HEIGHT/3; // top 
 //max number of objects to be detected in frame
 const int MAX_NUM_OBJECTS=1;
 //delay between frames, in ms

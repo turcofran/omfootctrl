@@ -17,7 +17,7 @@
 #include <time.h> 
 #include <chrono>
 
-//~ #define VIDEO_IN
+#define VIDEO_IN
 //~ #define VIDEO_OUT
 
 OCVController::OCVController(const int incamdev, const int  baudrate,  
@@ -175,11 +175,11 @@ void OCVController::drawCmdAreas(Mat &frame){
   //~ line(frame, Point(0, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(255,255,0),2);
   
   // Middle line
-  line(frame, Point(FRAME_WIDTH/4, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(255,255,0),2);
+  line(frame, Point(EXP_HORI_LIMIT, BBUTT_VER_LIMIT), Point(FRAME_WIDTH, BBUTT_VER_LIMIT), Scalar(255,255,0),2);
   // A
-  line(frame, Point(2*FRAME_WIDTH/4, 2*FRAME_HEIGHT/3), Point(2*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
+  line(frame, Point(2*FRAME_WIDTH/4, BBUTT_VER_LIMIT), Point(2*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
   // B
-  line(frame, Point(3*FRAME_WIDTH/4, 2*FRAME_HEIGHT/3), Point(3*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
+  line(frame, Point(3*FRAME_WIDTH/4, BBUTT_VER_LIMIT), Point(3*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
   
   // Expression lines
   line(frame, Point(EXP_HORI_LIMIT, 0), Point(EXP_HORI_LIMIT, FRAME_HEIGHT), Scalar(255,255,0),2);
@@ -232,7 +232,7 @@ string OCVController::trackAndEval(Mat &threshold, Mat &canvas){
             trackState = TrackStt::EXPRESSION;
             cout << "Next state TrackStt::EXPRESSION" << endl; 
           }
-          else if (lastPoint.y < 2*FRAME_HEIGHT/3) {
+          else if (lastPoint.y < BBUTT_VER_LIMIT) {
             trackState = TrackStt::ARMED;
             cout << "Next state TrackStt::ARMED" << endl;
           }
@@ -244,7 +244,7 @@ string OCVController::trackAndEval(Mat &threshold, Mat &canvas){
           if (lastPoint.x < EXP_HORI_LIMIT) {
             trackState = TrackStt::EXPRESSION;
           }
-          else if (lastPoint.y > 2*FRAME_HEIGHT/3) {
+          else if (lastPoint.y > BBUTT_VER_LIMIT) {
             trackState = TrackStt::DEBOUNCING;
             debounceCounter = debouceFrames;
             if (lastPoint.x < 2*FRAME_WIDTH/4) {
