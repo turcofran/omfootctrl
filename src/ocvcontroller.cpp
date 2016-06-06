@@ -17,8 +17,9 @@
 #include <time.h> 
 #include <chrono>
 
-#define VIDEO_IN
+//~ #define VIDEO_IN
 //~ #define VIDEO_OUT
+//~ #define DEBUB_TICS
 
 OCVController::OCVController(const int incamdev, const int  baudrate,  
                const string map, const bool nogui, const int guiport,  
@@ -153,8 +154,9 @@ void OCVController::processInput(void)
     if (waitKey(CV_DELAY_MS)!=-1) exit(0);
   #endif
   auto tic3 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
-  if (DEBUB_TICS)
+  #ifdef DEBUB_TICS
     cout << "processInput: " << tic1.count() << " - " << tic2.count()<< " - " << tic3.count()<< endl;
+  #endif
 }
 
 // TODO set the color in function to the state

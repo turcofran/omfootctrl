@@ -77,7 +77,7 @@ const int CV_DELAY_MS=1;
 //Circular buffer CAPACITY
 const int CB_CAPACITY=10;
 const int ERODE_RECT_PIXEL=4;
-const int DILATE_RECT_PIXEL=8;
+const int DILATE_RECT_PIXEL=12;
 const int ERODE_DILATE_ITS=2;
 const bool DEBUB_TICS=false;
 //minimum and maximum object area
