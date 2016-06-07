@@ -68,7 +68,7 @@ int main(int ac, char* av[])
   string osc_adress_def = cDEF_OSC_SERVER_ADDR;
   string map = cMAP_FILE;
   bool verbose = false;
-  bool noGUI = true;
+  bool noGUI = false;
     
   namespace po = boost::program_options;
   po::options_description desc("Options for OM Controller with OpenCV");

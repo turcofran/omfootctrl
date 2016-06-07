@@ -109,19 +109,11 @@ string OCV::readBLine(void)
   #ifdef VIDEO_OUT
     videoOut.write(camFeed);
   #endif
-  //convert frame from BGR to HSV colorspace
   cvtColor(camFeed, procHSV, COLOR_BGR2HSV);
-  //filter HSV image between values and store filtered image to threshold matrix
   inRange(procHSV, hsvRange.lowerb, hsvRange.upperb, procThreshold);
-  //perform morphological operations on thresholded image to eliminate noise and emphasize the filtered object(s)
   erodeAndDilate(procThreshold);
-  //pass in thresholded frame to our object tracking function
-  //this function will return the x and y coordinates of the
-  //filtered object
   auto tic2 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
-    
-  retCmd = trackAndEval(procThreshold, camFeed);
-    
+  retCmd = trackAndEval(procThreshold, camFeed);    
   //~ drawCmdAreas(canvas);
   //~ imshow(W_NAME_CANVAS, canvas);
   drawCmdAreas(camFeed);
@@ -258,10 +250,10 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
             if (lastPoint.y > EXP_VER_HIGH) 
               expLevel = 0;
             else if (lastPoint.y < EXP_VER_LOW)
-              expLevel = expressionDiv;
+              expLevel = expressionDiv-1;
             else {
               float ylevel = (float)(lastPoint.y-EXP_VER_LOW)/(float)(EXP_VER_RANGE);
-              expLevel = (int)((float)expressionDiv*(1.0 - ylevel));
+              expLevel = (int)((float)(expressionDiv-1)*(1.0 - ylevel));
             }
             cout << "Expression level:" << expLevel << endl; 
             retValue = "X"+to_string(expLevel);

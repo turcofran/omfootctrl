@@ -88,11 +88,12 @@ void FootController::processInput(void)
               sTempCmd += "," ;
               sTempCmd += aBank->name;
               if(sendExpression2GUI){
-                char cExpressVal[3];
-                sprintf(cExpressVal, "%d", arrivedCmd[1]);
-                //itoa(sendExpressValue, cExpressVal, 10);
+                //~ char cExpressVal[3];
+                //~ sprintf(cExpressVal, "%d", arrivedCmd[1]);
+                //~ sTempCmd += "," ;
+                //~ sTempCmd += cExpressVal;
                 sTempCmd += "," ;
-                sTempCmd += cExpressVal;
+                sTempCmd += arrivedCmd.substr(1, arrivedCmd.size() - 1);
               }
               socketGUI->send_to(boost::asio::buffer(sTempCmd.c_str(), sTempCmd.length()), guiEndpoint);
           } catch (exception& e) {
