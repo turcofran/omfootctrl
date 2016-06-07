@@ -29,6 +29,14 @@
     ...
   <commands_map_banks>
   
+  This is an example of how to instanciate a single const "record" command:
+  
+  const cmdmap::argument RECORD_ARG{'s', false, 0.0, 0.0, "record"};
+  const list<cmdmap::argument> RECORD_ARGLIST = {RECORD_ARG};
+  const list<unsigned int> RECORD_DATABYTESLIST = {0};
+  const cmdmap::command RECORD_CMD{"record", "osc", '1', "", "record", RECORD_ARGLIST, RECORD_DATABYTESLIST};
+
+  
 *******************************************************************************/
 #ifndef CMD_MAP_H_
 #define CMD_MAP_H_

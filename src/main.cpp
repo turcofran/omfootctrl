@@ -45,7 +45,7 @@
 using namespace std;
 
 #include <boost/program_options.hpp>
-#include "ocvcontroller.hpp"
+#include "footcontroller.hpp"
 #include "main_config.hpp"
 
 
@@ -111,12 +111,12 @@ int main(int ac, char* av[])
       cout << " - Commands map file: " << map << endl;
     }
     // Get  controller
-    OCVController ocv(camdev, cBAUD_RATE, map, noGUI, gui_port, osc_adress_def, cEXPRESSION_DIV, verbose);
+    FootController footctrl(camdev, cBAUD_RATE, map, noGUI, gui_port, osc_adress_def, cEXPRESSION_DIV, verbose);
     // Main loop
     for(;;){
-      ocv.processInput();
+      footctrl.processInput();
     }
-  } catch(ExOCVController& e)  {
+  } catch(ExFootController& e)  {
       cerr<< e.what() <<endl;
       return EXIT_FAILURE;
   } catch(boost::system::system_error& e)  {

@@ -7,7 +7,7 @@
   Foundation, version 2 of the License.
 
 *******************************************************************************/
-#include "ocvcontroller.hpp"
+#include "ocv.hpp"
 #include "main_config.hpp"
 
 #include <libv4l2.h>
@@ -21,14 +21,17 @@
 //~ #define VIDEO_OUT
 //~ #define DEBUB_TICS
 
-OCVController::OCVController(const int incamdev, const int  baudrate,  
-               const string map, const bool nogui, const int guiport,  
-               const string defoscserv, const int expressiondiv, const bool verb)  throw(ExOCVController)
+OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressiondiv, const bool verb)  throw(ExOCV)
 {
-  namespace bip = boost::asio::ip;
   expressionDiv = expressiondiv;
   verbose = verb;
-  noGUI = nogui;
+
+  if (readHSVFilterConf(hsvFilterConfFile)!=0) {
+    cerr << "WARNING! Not possible to read configuration file with HSV range. Default bounds will be used." << endl;
+    hsvRange.lowerb = Scalar(DEF_H_MIN, DEF_S_MIN, DEF_V_MIN);
+    hsvRange.upperb = Scalar(DEF_H_MAX, DEF_S_MAX, DEF_V_MAX);
+  }
+  
   try
   {
     // Initialize structuring elements for morphological operations
@@ -46,7 +49,7 @@ OCVController::OCVController(const int incamdev, const int  baudrate,
     // auto exposure control
     if (disable_exposure_auto_priority(camdev) != 0)
       cerr << "WARNING! Not possible to disable auto priority. The delay in the camera reading may be too much!" << endl;
-      //~ throw(ExOCVController("Not possible to disable auto priority")); 
+      //~ throw(ExOCV("Not possible to disable auto priority")); 
         
     // open video to write
     #ifdef VIDEO_OUT
@@ -55,7 +58,7 @@ OCVController::OCVController(const int incamdev, const int  baudrate,
       string voname = "vsample"+to_string(now)+".avi";
       videoOut.open(voname, 0, 30.0, Size(FRAME_WIDTH, FRAME_HEIGHT));
       if (!videoOut.isOpened())
-        throw(ExOCVController("Not possible to open write video")); 
+        throw(ExOCV("Not possible to open write video")); 
     #endif
 
     //open capture object at location zero (default location for webcam)
@@ -75,39 +78,23 @@ OCVController::OCVController(const int incamdev, const int  baudrate,
     //set height and width of capture frame
     videoCap.set(CV_CAP_PROP_FRAME_WIDTH,FRAME_WIDTH);
     videoCap.set(CV_CAP_PROP_FRAME_HEIGHT,FRAME_HEIGHT);
-    // Get commnds map and its iterator       
-    cmap = new CmdMap(map);
-    aBank = cmap->getFirstBank(); 
-    cmap->printSelBank(verbose);
-    // Create midi device
-    // TODO reenable midi
-    //midiDev = new MIDI(MIDI_CLIENT_NAME, expressiondiv, verbose);
-    // Create osc device
-    oscDev = new OSC(defoscserv, expressiondiv, verbose);
-    // Create an UDP socket for GUI in localhost
-    //~ if (!noGUI){        
-      //~ guiEndpoint = bip::udp::endpoint(bip::address::from_string("127.0.0.1"), guiport);
-      //~ boost::asio::io_service ioService;
-      //~ socketGUI = new bip::udp::socket(ioService);
-      //~ socketGUI->open(bip::udp::v4());
-    //~ }
+
     namedWindow(W_NAME_FEED); moveWindow(W_NAME_FEED, 10, 10);
     namedWindow(W_NAME_THRESHOLD); moveWindow(W_NAME_THRESHOLD, 400, 10);
     namedWindow(W_NAME_CANVAS); moveWindow(W_NAME_CANVAS, 800, 10);
   }
   catch (const exception &e)
   {
-    throw(ExOCVController(e.what())); 
+    throw(ExOCV(e.what())); 
   }
 }
 
-// Process input method
-void OCVController::processInput(void)
+// Process input
+string OCV::readBLine(void)
 {
   auto start = chrono::steady_clock::now();
-  bool sendExpression2GUI = false;
+  string retCmd = "";
   Mat camFeed, procHSV, procThreshold;
-  //~ Mat canvas(FRAME_HEIGHT, FRAME_WIDTH, CV_8U); 
   Mat canvas = Mat::zeros(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
   // Get commnds map and it
   if (!videoCap.read(camFeed)) {
@@ -115,7 +102,7 @@ void OCVController::processInput(void)
     #ifdef VIDEO_IN
       exit(0);
     #endif
-    return;
+    return retCmd;
   }
   auto tic1 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
   //flip image
@@ -129,7 +116,7 @@ void OCVController::processInput(void)
   //convert frame from BGR to HSV colorspace
   cvtColor(camFeed, procHSV, COLOR_BGR2HSV);
   //filter HSV image between values and store filtered image to threshold matrix
-  inRange(procHSV,Scalar(H_MIN,S_MIN,V_MIN),Scalar(H_MAX,S_MAX,V_MAX),procThreshold);
+  inRange(procHSV, hsvRange.lowerb, hsvRange.upperb, procThreshold);
   //perform morphological operations on thresholded image to eliminate noise and emphasize the filtered object(s)
   erodeAndDilate(procThreshold);
   //pass in thresholded frame to our object tracking function
@@ -137,8 +124,7 @@ void OCVController::processInput(void)
   //filtered object
   auto tic2 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
     
-    
-  processCmd(trackAndEval(procThreshold, canvas));
+  retCmd = trackAndEval(procThreshold, canvas);
     
   //delay so that screen can refresh.
   #ifdef SHOW_WIN
@@ -157,10 +143,11 @@ void OCVController::processInput(void)
   #ifdef DEBUB_TICS
     cout << "processInput: " << tic1.count() << " - " << tic2.count()<< " - " << tic3.count()<< endl;
   #endif
+  return retCmd;
 }
 
 // TODO set the color in function to the state
-void OCVController::drawObject(int area, Point point, Mat &frame){
+void OCV::drawObject(int area, Point point, Mat &frame){
   //use some of the openCV drawing functions to draw crosshairs on your tracked image!
   circle(frame,point,4,Scalar(0,255,0),-1);
   
@@ -172,7 +159,7 @@ void OCVController::drawObject(int area, Point point, Mat &frame){
 }
 
 
-void OCVController::drawCmdAreas(Mat &frame){
+void OCV::drawCmdAreas(Mat &frame){
   //~ line(frame, Point(0, FRAME_HEIGHT/3), Point(FRAME_WIDTH, FRAME_HEIGHT/3), Scalar(255,255,0),2);
   //~ line(frame, Point(0, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(255,255,0),2);
   
@@ -190,7 +177,7 @@ void OCVController::drawCmdAreas(Mat &frame){
 }
 
 
-void OCVController::erodeAndDilate(Mat &frame){
+void OCV::erodeAndDilate(Mat &frame){
   erode(frame, frame, morphERODE, Point(-1,-1), ERODE_DILATE_ITS);
   //~ erode(procThreshold, procThreshold, erodeElement);
   //~ dilate(procThreshold, procThreshold, dilateElement);
@@ -199,7 +186,7 @@ void OCVController::erodeAndDilate(Mat &frame){
 }
 
 
-string OCVController::trackAndEval(Mat &threshold, Mat &canvas){
+string OCV::trackAndEval(Mat &threshold, Mat &canvas){
   Mat temp;
   threshold.copyTo(temp);
   //these two vectors needed for output of findContours
@@ -302,14 +289,14 @@ string OCVController::trackAndEval(Mat &threshold, Mat &canvas){
 }
 
 
-int OCVController::disable_exposure_auto_priority(const int dev) 
+int OCV::disable_exposure_auto_priority(const int dev) 
 {
   string camdev = "/dev/video" + to_string(dev);
   return disable_exposure_auto_priority(camdev);
 }
 
 
-int OCVController::disable_exposure_auto_priority(const string dev) 
+int OCV::disable_exposure_auto_priority(const string dev) 
 {
   int descriptor = v4l2_open(dev.c_str(), O_RDWR);
 
@@ -330,77 +317,43 @@ int OCVController::disable_exposure_auto_priority(const string dev)
 
 
 // TODO Implement
-int OCVController::read_frame_interval_us(const int dev)
+int OCV::read_frame_interval_us(const int dev)
 {
   return -1;
 }
 
+
 // TODO Implement
-int OCVController::read_frame_interval_us(VideoCapture cap)
+int OCV::read_frame_interval_us(VideoCapture cap)
 {
   return -1;
 //  return (int)(1000000.0/(double)(cap.get(CV_CAP_PROP_FPS)));
 }; 
 
-// Process message from ocv
-void OCVController::processCmd(const string arrivedCmd)
-{
-  if (arrivedCmd=="") return;
-  bool sendExpression2GUI = false;
-  try
+
+int OCV::readHSVFilterConf(const string hsvFilterConfFile) {
+  try 
   {
-    BOOST_FOREACH(cmdmap::command cmapIt, aBank->cmmds){
-      if(cmapIt.button == arrivedCmd[0]){  
-        // Internal command
-        if(cmapIt.type=="internal"){
-          if(verbose) cout << "Send INTERNAL command: " << cmapIt.name << endl;
-          // Select next commands map bank
-          if(cmapIt.name=="sel_next_bank"){   
-              aBank = cmap->getNextBank();
-              cmap->printSelBank(verbose);
-          }
-          // Select previous commands map bank
-          else if(cmapIt.name=="sel_prev_bank"){ 
-              aBank = cmap->getPrevBank();
-              cmap->printSelBank(verbose);
-          }
-        } 
-        // Midi command
-        if(cmapIt.type=="midi"){
-          if(verbose) cout << "Send MIDI command: " << cmapIt.name << endl;
-          sendExpression2GUI = midiDev->parseAndSendMess(arrivedCmd, cmapIt);
-        }
-        // OSC command
-        else{   
-          if(verbose) cout << "Send OSC command: " << cmapIt.name << endl;
-          sendExpression2GUI = oscDev->parseAndSendMess(arrivedCmd, cmapIt);
-        }
-        if(!noGUI){
-          // Notify to GUI about the command arrived by sending an string  
-          // with format "button_pressed,actual_bank,expression" if(expression)
-          try{
-              string sTempCmd("");
-              sTempCmd += cmapIt.button;
-              sTempCmd += "," ;
-              sTempCmd += aBank->name;
-              if(sendExpression2GUI){
-                char cExpressVal[3];
-                sprintf(cExpressVal, "%d", arrivedCmd[1]);
-                //itoa(sendExpressValue, cExpressVal, 10);
-                sTempCmd += "," ;
-                sTempCmd += cExpressVal;
-              }
-              socketGUI->send_to(boost::asio::buffer(sTempCmd.c_str(), sTempCmd.length()), guiEndpoint);
-          } catch (exception& e) {
-             throw(ExOCVController(e.what()));
-          }
-        }
-        break;
+    ifstream infile(hsvFilterConfFile);
+    int tmpBounds[6];
+    for (int i=0; i<6;i++){
+      int tmp;
+      infile >> tmp;
+      if (i == 0 || i ==3) {
+        if (tmp>179 || tmp <0) return -1;
       }
+      else {
+        if (tmp>255 || tmp <0) return -1;
+      }
+      tmpBounds[i] = tmp;
     }
-  } catch(ExMIDI& e) { // In this instance, exceptions are not thrown
-      cerr<< e.what() <<endl;
-  } catch(ExOSC& e) {
-      cerr<< e.what() <<endl;
+    hsvRange.lowerb = Scalar(tmpBounds[0], tmpBounds[1], tmpBounds[2]);
+    hsvRange.upperb = Scalar(tmpBounds[3], tmpBounds[4], tmpBounds[5]);
+    return 0;
+  }
+  catch (const exception &e)
+  {
+    cerr << "Exception reading color range file" << endl;
+    return -1;
   }
 }

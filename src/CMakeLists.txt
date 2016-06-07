@@ -37,7 +37,8 @@ option (SHOW_WIN
 option (DEBUG 
         "Use debug" OFF)
 
-add_executable( ${CVOM_BIN_NAME} main_config.hpp ocvcontroller.cpp ocvcontroller.hpp cmdmap.hpp osc.cpp osc.hpp midi.cpp midi.hpp main.cpp )
+add_executable( ${CVOM_BIN_NAME} main_config.hpp ominputdev.hpp footcontroller.cpp footcontroller.hpp
+                  ocv.cpp ocv.hpp cmdmap.hpp osc.cpp osc.hpp midi.cpp midi.hpp main.cpp )
 target_link_libraries( ${CVOM_BIN_NAME} ${OpenCV_LIBS} ) 
 target_link_libraries( ${CVOM_BIN_NAME} ${Boost_LIBRARIES} )
  

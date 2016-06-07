@@ -6,8 +6,8 @@
   Foundation, version 2 of the License.
 
 *******************************************************************************/
-#ifndef OCVCONTROLLER_H_
-#define OCVCONTROLLER_H_
+#ifndef OCV_H_
+#define OCV_H_
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,8 +17,8 @@
 #include <pthread.h>
 #include <fstream>
 
-#include "serialport.hpp"
-#include "lo/lo.h"
+#include "ominputdev.hpp"
+
 #include <csignal>
 #include "cmdmap.hpp"
 #include "osc.hpp"
@@ -33,22 +33,20 @@
 
 using namespace std;
 using namespace cv;
-//using namespace boost;
-//using namespace boost::asio;
-//using namespace boost::asio::ip;
 
-#define MIDI_CLIENT_NAME "OMBridge"
-
-// TODO set at calibration stage
+struct hsv_rage_t {
+  Scalar lowerb;
+  Scalar upperb;
+};
+// TODO calibration stage
 // HSV limits 
 // Paper
-const int H_MIN = 95;
-const int S_MIN = 180;
-const int V_MIN = 0;
-
-const int H_MAX = 128;
-const int S_MAX = 256;
-const int V_MAX = 256;
+const int DEF_H_MIN = 95;
+const int DEF_S_MIN = 180;
+const int DEF_V_MIN = 0;
+const int DEF_H_MAX = 128;
+const int DEF_S_MAX = 256;
+const int DEF_V_MAX = 256;
 // Card
 //~ const int H_MIN = 85;
 //~ const int H_MAX = 128;
@@ -79,7 +77,6 @@ const int CB_CAPACITY=10;
 const int ERODE_RECT_PIXEL=4;
 const int DILATE_RECT_PIXEL=12;
 const int ERODE_DILATE_ITS=2;
-const bool DEBUB_TICS=false;
 //minimum and maximum object area
 const int MIN_OBJECT_AREA = 20*20;
 const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
@@ -88,63 +85,48 @@ const string W_NAME_FEED = "OM OpenCV - Feed";
 const string W_NAME_THRESHOLD = "Thresholded Image";
 const string W_NAME_CANVAS = "OM OpenCV - Canvas";
 
-const cmdmap::argument RECORD_ARG{'s', false, 0.0, 0.0, "record"};
-const list<cmdmap::argument> RECORD_ARGLIST = {RECORD_ARG};
-const list<unsigned int> RECORD_DATABYTESLIST = {0};
 
-const cmdmap::command RECORD_CMD{"record", "osc", '1', "", "record", RECORD_ARGLIST, RECORD_DATABYTESLIST};
+enum class TrackStt {NO_TRACK, UNARMED, ARMED, DEBOUNCING, TRIGGER, EXPRESSION};
 
-enum class TrackStt { NO_TRACK, UNARMED, ARMED, DEBOUNCING, TRIGGER, EXPRESSION};
-
-//exceptions for OCVController
-class ExOCVController: public exception
+//exceptions for OCV
+class ExOCV: public exception
 {
 protected:
  const char *expMess;
 public:
- ExOCVController(const char *mess) throw() : exception() { expMess=mess;}
+ ExOCV(const char *mess) throw() : exception() { expMess=mess;}
  virtual const char *what() const throw()
  {
    return expMess;
  };
 };
 
-//OCVController
-class OCVController
+//OCV
+class OCV: public OMInputDev
 {  
   
 public:
-  OCVController(const int incamdev, const int  baudrate,  
-               const string map, const bool nogui, const int guiport,  
-               const string defoscserv, const int expressiondiv, const bool verb)  throw(ExOCVController);  
-  void processInput(void);
+  OCV(const int incamdev, const string hsvRangeFile, const int expressiondiv, const bool verb)  throw(ExOCV);  
+  string readBLine(void);
   
-  // TODO these are not public?
-
-  void drawObject(int area, Point point, Mat &frame);
-
-  void erodeAndDilate(Mat &frame);
-  
-  string trackAndEval(Mat & threshold, Mat &canvas);
   
 protected: 
+
+  void drawObject(int area, Point point, Mat &frame);
+  void erodeAndDilate(Mat &frame);
+  string trackAndEval(Mat & threshold, Mat &canvas);
+
+  int readHSVFilterConf(const string hsvFilterConfFile);
+
   void drawCmdAreas(Mat &frame);
   int disable_exposure_auto_priority(const int dev);
   int disable_exposure_auto_priority(const string dev);
   int read_frame_interval_us(const int dev);
   int read_frame_interval_us(VideoCapture cap);
-  void processCmd(const string arrivedCmd);
 
 private:
  
   bool verbose;
-  bool noGUI;
-  boost::asio::ip::udp::endpoint guiEndpoint;
-  boost::asio::ip::udp::udp::socket * socketGUI;
-  CmdMap * cmap;
-  cmdmap::bank * aBank;
-  OSC * oscDev;
-  MIDI * midiDev;
   int expressionDiv;
   
   // OpenCV realted objects
@@ -153,13 +135,14 @@ private:
   int debouceFrames, debounceCounter;
   int frameIntervalUS;
   TrackStt trackState;
+  hsv_rage_t hsvRange;
 
   // Canvas matrix
   //~ Mat canvas;
   // Structuring elements for morphological operations
   Mat morphERODE, morphDILATE;
   //x and y values for the location of the object
-  int x=0, y=0;
+  //~ int x=0, y=0;
   // Circular buffer for the tracked points
   //~ boost::circular_buffer<Point> cb_tpoints; //(CB_CAPACITY);
 
