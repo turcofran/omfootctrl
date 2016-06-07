@@ -1,6 +1,4 @@
-// the configured options and settings for Tutorial
 #define CVOM_VERSION_MAJOR @CVOM_VERSION_MAJOR@
 #define CVOM_VERSION_MINOR @CVOM_VERSION_MINOR@
 
 #cmakedefine DEBUG
-#cmakedefine SHOW_WIN

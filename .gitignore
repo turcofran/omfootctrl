@@ -12,6 +12,7 @@ src/gui_ombridge.pl
 src/logo.ico
 src/logo.png
 src/main_config.hpp
+src/ocv_config.hpp
 src/sample.avi
 src/sample/
 src/ut_cmdmap.cpp

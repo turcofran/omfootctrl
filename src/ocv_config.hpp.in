@@ -1,0 +1,4 @@
+#cmakedefine SHOW_WIN
+#cmakedefine VIDEO_IN
+#cmakedefine VIDEO_OUT
+#cmakedefine DEBUG_TICS

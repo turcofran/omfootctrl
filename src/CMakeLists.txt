@@ -14,6 +14,10 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/main_config.hpp.in"
   "${PROJECT_BINARY_DIR}/main_config.hpp"
 )
+configure_file (
+  "${PROJECT_SOURCE_DIR}/ocv_config.hpp.in"
+  "${PROJECT_BINARY_DIR}/ocv_config.hpp"
+)
 
 # find boost packageBOOST_INCLUDEDIR
 set (Boost_NO_SYSTEM_PATHS OFF) 
@@ -36,6 +40,12 @@ option (SHOW_WIN
         "Use windows for debug" ON) 
 option (DEBUG 
         "Use debug" OFF)
+option (DEBUG_TICS 
+        "Use debug tics" OFF)
+option (VIDEO_IN
+        "Use video input" OFF)
+option (VIDEO_OUT
+        "Use video output" OFF)
 
 add_executable( ${CVOM_BIN_NAME} main_config.hpp ominputdev.hpp footcontroller.cpp footcontroller.hpp
                   ocv.cpp ocv.hpp cmdmap.hpp osc.cpp osc.hpp midi.cpp midi.hpp main.cpp )

@@ -8,7 +8,7 @@
 
 *******************************************************************************/
 #include "ocv.hpp"
-#include "main_config.hpp"
+#include "ocv_config.hpp"
 
 #include <libv4l2.h>
 #include <linux/videodev2.h>
@@ -16,10 +16,6 @@
 #include <fcntl.h>
 #include <time.h> 
 #include <chrono>
-
-//~ #define VIDEO_IN
-//~ #define VIDEO_OUT
-//~ #define DEBUB_TICS
 
 OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressiondiv, const bool verb)  throw(ExOCV)
 {
@@ -80,8 +76,8 @@ OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressio
     videoCap.set(CV_CAP_PROP_FRAME_HEIGHT,FRAME_HEIGHT);
 
     namedWindow(W_NAME_FEED); moveWindow(W_NAME_FEED, 10, 10);
-    namedWindow(W_NAME_THRESHOLD); moveWindow(W_NAME_THRESHOLD, 400, 10);
-    namedWindow(W_NAME_CANVAS); moveWindow(W_NAME_CANVAS, 800, 10);
+    //~ namedWindow(W_NAME_THRESHOLD); moveWindow(W_NAME_THRESHOLD, 400, 10);
+    //~ namedWindow(W_NAME_CANVAS); moveWindow(W_NAME_CANVAS, 800, 10);
   }
   catch (const exception &e)
   {
@@ -124,15 +120,17 @@ string OCV::readBLine(void)
   //filtered object
   auto tic2 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
     
-  retCmd = trackAndEval(procThreshold, canvas);
+  retCmd = trackAndEval(procThreshold, camFeed);
     
+  //~ drawCmdAreas(canvas);
+  //~ imshow(W_NAME_CANVAS, canvas);
+  drawCmdAreas(camFeed);
+  imshow(W_NAME_FEED, camFeed);
   //delay so that screen can refresh.
-  #ifdef SHOW_WIN
-    imshow(W_NAME_FEED, camFeed);
-    imshow(W_NAME_THRESHOLD, procThreshold);
-  #endif
-  drawCmdAreas(canvas);
-  imshow(W_NAME_CANVAS, canvas);
+  //~ #ifdef SHOW_WIN
+    //~ imshow(W_NAME_FEED, camFeed);
+    //~ imshow(W_NAME_THRESHOLD, procThreshold);
+  //~ #endif
   //image will not appear without this waitKey() command
   #ifdef VIDEO_IN
     if (waitKey(DEF_FRAME_INT_US/1000)!=-1) exit(0);
@@ -140,7 +138,7 @@ string OCV::readBLine(void)
     if (waitKey(CV_DELAY_MS)!=-1) exit(0);
   #endif
   auto tic3 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
-  #ifdef DEBUB_TICS
+  #ifdef DEBUG_TICS
     cout << "processInput: " << tic1.count() << " - " << tic2.count()<< " - " << tic3.count()<< endl;
   #endif
   return retCmd;
@@ -154,22 +152,20 @@ void OCV::drawObject(int area, Point point, Mat &frame){
   line(frame, Point(point.x,point.y-10), Point(point.x,point.y+10), Scalar(0,255,0),0.5);
   line(frame, Point(point.x-10,point.y), Point(point.x+10,point.y), Scalar(0,255,0),0.5);
    
-  putText(frame, to_string(point.x) + ","+ to_string(point.y) + "\n" + to_string(area), 
-          Point(point.x, point.y+30), 1, 1, Scalar(0,255,0),2);  
+  putText(frame, to_string(point.x) + ","+ to_string(point.y), Point(point.x, point.y+30), 1, 1, Scalar(0,255,0),2);  
+  putText(frame, to_string(area), Point(point.x, point.y-40), 1, 1, Scalar(0,255,0),2);  
 }
 
 
 void OCV::drawCmdAreas(Mat &frame){
   //~ line(frame, Point(0, FRAME_HEIGHT/3), Point(FRAME_WIDTH, FRAME_HEIGHT/3), Scalar(255,255,0),2);
   //~ line(frame, Point(0, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(255,255,0),2);
-  
   // Middle line
   line(frame, Point(EXP_HORI_LIMIT, BBUTT_VER_LIMIT), Point(FRAME_WIDTH, BBUTT_VER_LIMIT), Scalar(255,255,0),2);
   // A
   line(frame, Point(2*FRAME_WIDTH/4, BBUTT_VER_LIMIT), Point(2*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
   // B
   line(frame, Point(3*FRAME_WIDTH/4, BBUTT_VER_LIMIT), Point(3*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
-  
   // Expression lines
   line(frame, Point(EXP_HORI_LIMIT, 0), Point(EXP_HORI_LIMIT, FRAME_HEIGHT), Scalar(255,255,0),2);
   line(frame, Point(0, EXP_VER_LOW), Point(EXP_HORI_LIMIT, EXP_VER_LOW), Scalar(255,255,0),2);
@@ -179,8 +175,6 @@ void OCV::drawCmdAreas(Mat &frame){
 
 void OCV::erodeAndDilate(Mat &frame){
   erode(frame, frame, morphERODE, Point(-1,-1), ERODE_DILATE_ITS);
-  //~ erode(procThreshold, procThreshold, erodeElement);
-  //~ dilate(procThreshold, procThreshold, dilateElement);
   dilate(frame, frame, morphDILATE, Point(-1,-1), ERODE_DILATE_ITS);
   //TODO maybe a blur filter is faster than this... medianBLur?
 }
@@ -219,11 +213,11 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
         case TrackStt::UNARMED:
           if (lastPoint.x < EXP_HORI_LIMIT) {
             trackState = TrackStt::EXPRESSION;
-            cout << "Next state TrackStt::EXPRESSION" << endl; 
+            //~ cout << "Next state TrackStt::EXPRESSION" << endl; 
           }
           else if (lastPoint.y < BBUTT_VER_LIMIT) {
             trackState = TrackStt::ARMED;
-            cout << "Next state TrackStt::ARMED" << endl;
+            //~ cout << "Next state TrackStt::ARMED" << endl;
           }
           else {
             trackState = TrackStt::UNARMED;
@@ -251,7 +245,7 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
           }
           break;
         case TrackStt::DEBOUNCING: 
-          cout << "DEBOUNCING" << endl; 
+          //~ cout << "DEBOUNCING" << endl; 
           if (debounceCounter==0) 
             trackState = TrackStt::UNARMED;
           break;
