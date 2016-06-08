@@ -17,6 +17,11 @@
 #include <time.h> 
 #include <chrono>
 
+//~ void on_slowerb_trackbar( int value, void* userdata)
+//~ {
+  //~ hsvRange.lowerb[1] = value;
+//~ }
+
 OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressiondiv, const bool verb)  throw(ExOCV)
 {
   expressionDiv = expressiondiv;
@@ -56,9 +61,21 @@ OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressio
       if (!videoOut.isOpened())
         throw(ExOCV("Not possible to open write video")); 
     #endif
+    
+    // get image for layout
+    Mat _alpha = imread("img/layout6x.png", -1);
+    Mat _layout6x = imread("img/layout6x.png");
+    if (!_layout6x.data || !_alpha.data)
+      throw(ExOCV("Not possible to read controller layout")); 
+    vector<Mat> ch;
+    split(_alpha, ch);
+    layout6x = Mat::zeros(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
+    _layout6x.copyTo(layout6x, ch[3]);
 
     //open capture object at location zero (default location for webcam)
     videoCap.open(camdev);
+    if (!videoCap.isOpened())
+      throw(ExOCV("Not possible to open input device or video")); 
     // TODO implement reading the fps by using v4l2 lib
     int frameIntervalUS = read_frame_interval_us(videoCap);
     if (frameIntervalUS == -1) {
@@ -74,8 +91,10 @@ OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressio
     //set height and width of capture frame
     videoCap.set(CV_CAP_PROP_FRAME_WIDTH,FRAME_WIDTH);
     videoCap.set(CV_CAP_PROP_FRAME_HEIGHT,FRAME_HEIGHT);
-
+    
     namedWindow(W_NAME_FEED); moveWindow(W_NAME_FEED, 10, 10);
+    //~ createTrackbar( "S lowerb", W_NAME_FEED, NULL, 256, on_slowerb_trackbar);
+    //~ cerr << getBuildInformation() << endl;
     //~ namedWindow(W_NAME_THRESHOLD); moveWindow(W_NAME_THRESHOLD, 400, 10);
     //~ namedWindow(W_NAME_CANVAS); moveWindow(W_NAME_CANVAS, 800, 10);
   }
@@ -90,8 +109,9 @@ string OCV::readBLine(void)
 {
   auto start = chrono::steady_clock::now();
   string retCmd = "";
+  char keyPressed;
   Mat camFeed, procHSV, procThreshold;
-  Mat canvas = Mat::zeros(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
+  //~ Mat canvas = Mat::zeros(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
   // Get commnds map and it
   if (!videoCap.read(camFeed)) {
     cerr << "VideoCapture is not reading" << endl;
@@ -113,10 +133,15 @@ string OCV::readBLine(void)
   inRange(procHSV, hsvRange.lowerb, hsvRange.upperb, procThreshold);
   erodeAndDilate(procThreshold);
   auto tic2 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
-  retCmd = trackAndEval(procThreshold, camFeed);    
+  if (!paused)
+    retCmd = trackAndEval(procThreshold, camFeed);
+  else 
+    putText(camFeed, "PAUSED", Point(FRAME_WIDTH/3, FRAME_HEIGHT/2), 1, 2, Scalar(255,255,0),2);
   //~ drawCmdAreas(canvas);
   //~ imshow(W_NAME_CANVAS, canvas);
-  drawCmdAreas(camFeed);
+  //drawCmdAreas(camFeed);
+  addWeighted(camFeed, 1, layout6x, 0.5, 0.0, camFeed);
+  
   imshow(W_NAME_FEED, camFeed);
   //delay so that screen can refresh.
   //~ #ifdef SHOW_WIN
@@ -125,10 +150,15 @@ string OCV::readBLine(void)
   //~ #endif
   //image will not appear without this waitKey() command
   #ifdef VIDEO_IN
-    if (waitKey(DEF_FRAME_INT_US/1000)!=-1) exit(0);
+    keyPressed = waitKey(DEF_FRAME_INT_US/1000);
   #else  
-    if (waitKey(CV_DELAY_MS)!=-1) exit(0);
+    keyPressed = waitKey(CV_DELAY_MS);
   #endif
+  switch(keyPressed) {
+    case 27: exit(0); break;
+    case 32: paused = !paused; break;
+    default: break;
+  }
   auto tic3 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
   #ifdef DEBUG_TICS
     cout << "processInput: " << tic1.count() << " - " << tic2.count()<< " - " << tic3.count()<< endl;
@@ -136,41 +166,11 @@ string OCV::readBLine(void)
   return retCmd;
 }
 
-// TODO set the color in function to the state
-void OCV::drawObject(int area, Point point, Mat &frame){
-  //use some of the openCV drawing functions to draw crosshairs on your tracked image!
-  circle(frame,point,4,Scalar(0,255,0),-1);
-  
-  line(frame, Point(point.x,point.y-10), Point(point.x,point.y+10), Scalar(0,255,0),0.5);
-  line(frame, Point(point.x-10,point.y), Point(point.x+10,point.y), Scalar(0,255,0),0.5);
-   
-  putText(frame, to_string(point.x) + ","+ to_string(point.y), Point(point.x, point.y+30), 1, 1, Scalar(0,255,0),2);  
-  putText(frame, to_string(area), Point(point.x, point.y-40), 1, 1, Scalar(0,255,0),2);  
-}
-
-
-void OCV::drawCmdAreas(Mat &frame){
-  //~ line(frame, Point(0, FRAME_HEIGHT/3), Point(FRAME_WIDTH, FRAME_HEIGHT/3), Scalar(255,255,0),2);
-  //~ line(frame, Point(0, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(255,255,0),2);
-  // Middle line
-  line(frame, Point(EXP_HORI_LIMIT, BBUTT_VER_LIMIT), Point(FRAME_WIDTH, BBUTT_VER_LIMIT), Scalar(255,255,0),2);
-  // A
-  line(frame, Point(2*FRAME_WIDTH/4, BBUTT_VER_LIMIT), Point(2*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
-  // B
-  line(frame, Point(3*FRAME_WIDTH/4, BBUTT_VER_LIMIT), Point(3*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
-  // Expression lines
-  line(frame, Point(EXP_HORI_LIMIT, 0), Point(EXP_HORI_LIMIT, FRAME_HEIGHT), Scalar(255,255,0),2);
-  line(frame, Point(0, EXP_VER_LOW), Point(EXP_HORI_LIMIT, EXP_VER_LOW), Scalar(255,255,0),2);
-  line(frame, Point(0, EXP_VER_HIGH), Point(EXP_HORI_LIMIT, EXP_VER_HIGH), Scalar(255,255,0),2);
-}
-
-
 void OCV::erodeAndDilate(Mat &frame){
   erode(frame, frame, morphERODE, Point(-1,-1), ERODE_DILATE_ITS);
   dilate(frame, frame, morphDILATE, Point(-1,-1), ERODE_DILATE_ITS);
   //TODO maybe a blur filter is faster than this... medianBLur?
 }
-
 
 string OCV::trackAndEval(Mat &threshold, Mat &canvas){
   Mat temp;
@@ -194,9 +194,7 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
         moment.m10/area, // x
         moment.m01/area  // y
       );
-      #ifdef SHOW_WIN
-        drawObject(area, lastPoint, canvas);
-      #endif 
+      drawObject(area, lastPoint, canvas);
       // Evaluate in which position of the grid the point is
       // state machine
       // TOD CHECH bounding rectangles and contour to check the area!!!!
@@ -267,11 +265,40 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
     else {
       if (trackState!=TrackStt::DEBOUNCING) trackState = TrackStt::NO_TRACK;
       //void putText(Mat& img, const string& text, Point org, int fontFace, double fontScale, Scalar color, int thickness=1, int lineType=8, bool bottomLeftOrigin=false )
-      putText(canvas, "More than one object detected!", Point(2, FRAME_HEIGHT-10), 1, 0.5, Scalar(0,0,255), 1);
+      putText(canvas, "More than one object detected!", Point(2, FRAME_HEIGHT-10), 1, 0.7, Scalar(0,0,255), 1);
     }
   }
   if (trackState!=TrackStt::DEBOUNCING) trackState = TrackStt::NO_TRACK;
   return retValue;
+}
+
+
+// TODO set the color in function to the state
+void OCV::drawObject(int area, Point point, Mat &frame){
+  //use some of the openCV drawing functions to draw crosshairs on your tracked image!
+  circle(frame,point,4,Scalar(255,255,0),-1);
+  
+  line(frame, Point(point.x,point.y-10), Point(point.x,point.y+10), Scalar(255,255,0),0.5);
+  line(frame, Point(point.x-10,point.y), Point(point.x+10,point.y), Scalar(255,255,0),0.5);
+   
+  putText(frame, to_string(point.x) + ","+ to_string(point.y), Point(point.x, point.y+30), 1, 1, Scalar(255,255,0),2);  
+  putText(frame, to_string(area), Point(point.x, point.y-40), 1, 1, Scalar(255,255,0),2);  
+}
+
+
+void OCV::drawCmdAreas(Mat &frame){
+  //~ line(frame, Point(0, FRAME_HEIGHT/3), Point(FRAME_WIDTH, FRAME_HEIGHT/3), Scalar(255,255,0),2);
+  //~ line(frame, Point(0, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(255,255,0),2);
+  // Middle line
+  line(frame, Point(EXP_HORI_LIMIT, BBUTT_VER_LIMIT), Point(FRAME_WIDTH, BBUTT_VER_LIMIT), Scalar(255,255,0),2);
+  // A
+  line(frame, Point(2*FRAME_WIDTH/4, BBUTT_VER_LIMIT), Point(2*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
+  // B
+  line(frame, Point(3*FRAME_WIDTH/4, BBUTT_VER_LIMIT), Point(3*FRAME_WIDTH/4, FRAME_HEIGHT), Scalar(255,255,0),2);
+  // Expression lines
+  line(frame, Point(EXP_HORI_LIMIT, 0), Point(EXP_HORI_LIMIT, FRAME_HEIGHT), Scalar(255,255,0),2);
+  line(frame, Point(0, EXP_VER_LOW), Point(EXP_HORI_LIMIT, EXP_VER_LOW), Scalar(255,255,0),2);
+  line(frame, Point(0, EXP_VER_HIGH), Point(EXP_HORI_LIMIT, EXP_VER_HIGH), Scalar(255,255,0),2);
 }
 
 

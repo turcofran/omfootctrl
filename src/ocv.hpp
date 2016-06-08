@@ -136,10 +136,14 @@ private:
   int frameIntervalUS;
   TrackStt trackState;
   hsv_rage_t hsvRange;
+  bool paused;
 
+  //~ static void on_slowerb_trackbar( int, void* );
+  //~ static int sLowerbTrackebar;
   // Canvas matrix
   //~ Mat canvas;
   // Structuring elements for morphological operations
+  Mat layout6x;
   Mat morphERODE, morphDILATE;
   //x and y values for the location of the object
   //~ int x=0, y=0;
