@@ -228,7 +228,7 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
             }
             else if (lastPoint.x < B4_HORI_R) {
               cout << "4" << endl; 
-              retValue = "5";
+              retValue = "4";
             }
           }
           else if (lastPoint.y < BUTT_VER_T) {
