@@ -17,10 +17,7 @@
 #include <time.h> 
 #include <chrono>
 
-//~ void on_slowerb_trackbar( int value, void* userdata)
-//~ {
-  //~ hsvRange.lowerb[1] = value;
-//~ }
+int sLowerbTrackebar = DEF_S_MIN; // TODO this is not coherent!
 
 OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressiondiv, const bool verb)  throw(ExOCV)
 {
@@ -62,16 +59,10 @@ OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressio
         throw(ExOCV("Not possible to open write video")); 
     #endif
     
-    // get image for layout
-    Mat _alpha = imread("img/layout6x.png", -1);
-    Mat _layout6x = imread("img/layout6x.png");
-    if (!_layout6x.data || !_alpha.data)
+    // get image for layout and paused state
+    if (get_png(layout6x, LAYOUT_PNG_NAME) || get_png(layoutPaused, PAUSED_PNG_NAME))
       throw(ExOCV("Not possible to read controller layout")); 
-    vector<Mat> ch;
-    split(_alpha, ch);
-    layout6x = Mat::zeros(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
-    _layout6x.copyTo(layout6x, ch[3]);
-
+    
     //open capture object at location zero (default location for webcam)
     videoCap.open(camdev);
     if (!videoCap.isOpened())
@@ -93,11 +84,14 @@ OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressio
     videoCap.set(CV_CAP_PROP_FRAME_HEIGHT,FRAME_HEIGHT);
     
     namedWindow(W_NAME_FEED); moveWindow(W_NAME_FEED, 10, 10);
-    //~ createTrackbar( "S lowerb", W_NAME_FEED, NULL, 256, on_slowerb_trackbar);
+    // TODO Implement something more oop
+    createTrackbar( "+ light -", W_NAME_FEED, &sLowerbTrackebar, 256, NULL);
     //~ cerr << getBuildInformation() << endl;
-    //~ namedWindow(W_NAME_THRESHOLD); moveWindow(W_NAME_THRESHOLD, 400, 10);
-    //~ namedWindow(W_NAME_CANVAS); moveWindow(W_NAME_CANVAS, 800, 10);
-  }
+    #ifdef SHOW_WIN
+      namedWindow(W_NAME_HSV); moveWindow(W_NAME_HSV, 800, 10);
+      namedWindow(W_NAME_THRESHOLD); moveWindow(W_NAME_THRESHOLD, 400, 10);
+    #endif
+    }
   catch (const exception &e)
   {
     throw(ExOCV(e.what())); 
@@ -130,24 +124,23 @@ string OCV::readBLine(void)
     videoOut.write(camFeed);
   #endif
   cvtColor(camFeed, procHSV, COLOR_BGR2HSV);
-  inRange(procHSV, hsvRange.lowerb, hsvRange.upperb, procThreshold);
+  //~ inRange(procHSV, hsvRange.lowerb, hsvRange.upperb, procThreshold);
+  inRange(procHSV, Scalar(hsvRange.lowerb[0], sLowerbTrackebar, hsvRange.lowerb[2]), hsvRange.upperb, procThreshold);
   erodeAndDilate(procThreshold);
   auto tic2 = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - start);
   if (!paused)
     retCmd = trackAndEval(procThreshold, camFeed);
   else 
-    putText(camFeed, "PAUSED", Point(FRAME_WIDTH/3, FRAME_HEIGHT/2), 1, 2, Scalar(255,255,0),2);
-  //~ drawCmdAreas(canvas);
-  //~ imshow(W_NAME_CANVAS, canvas);
-  //drawCmdAreas(camFeed);
+    addWeighted(camFeed, 0.5, layoutPaused, 1, 0.0, camFeed);
+
   addWeighted(camFeed, 1, layout6x, 0.5, 0.0, camFeed);
-  
   imshow(W_NAME_FEED, camFeed);
+
   //delay so that screen can refresh.
-  //~ #ifdef SHOW_WIN
-    //~ imshow(W_NAME_FEED, camFeed);
-    //~ imshow(W_NAME_THRESHOLD, procThreshold);
-  //~ #endif
+  #ifdef SHOW_WIN
+    imshow(W_NAME_HSV, procHSV);
+    imshow(W_NAME_THRESHOLD, procThreshold);
+  #endif
   //image will not appear without this waitKey() command
   #ifdef VIDEO_IN
     keyPressed = waitKey(DEF_FRAME_INT_US/1000);
@@ -369,4 +362,16 @@ int OCV::readHSVFilterConf(const string hsvFilterConfFile) {
     cerr << "Exception reading color range file" << endl;
     return -1;
   }
+}
+
+int OCV::get_png(Mat & inmat, string filename){
+  Mat _alpha = imread(filename, -1);
+  Mat _imgNoalpha = imread(filename);
+  if (!_imgNoalpha.data || !_alpha.data)
+    return -1; 
+  vector<Mat> ch;
+  split(_alpha, ch);
+  inmat = Mat::zeros(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
+  _imgNoalpha.copyTo(inmat, ch[3]);
+  return 0;
 }

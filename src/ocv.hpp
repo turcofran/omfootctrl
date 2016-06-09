@@ -83,8 +83,9 @@ const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
 //names that will appear at the top of each window
 const string W_NAME_FEED = "OM OpenCV - Feed";
 const string W_NAME_THRESHOLD = "Thresholded Image";
-const string W_NAME_CANVAS = "OM OpenCV - Canvas";
-
+const string W_NAME_HSV = "OM OpenCV - HSV";
+const string LAYOUT_PNG_NAME = "img/layout6x.png";
+const string PAUSED_PNG_NAME = "img/paused.png";
 
 enum class TrackStt {NO_TRACK, UNARMED, ARMED, DEBOUNCING, TRIGGER, EXPRESSION};
 
@@ -108,7 +109,7 @@ class OCV: public OMInputDev
 public:
   OCV(const int incamdev, const string hsvRangeFile, const int expressiondiv, const bool verb)  throw(ExOCV);  
   string readBLine(void);
-  
+  static int get_png(Mat & inmat, string filename);
   
 protected: 
 
@@ -143,7 +144,7 @@ private:
   // Canvas matrix
   //~ Mat canvas;
   // Structuring elements for morphological operations
-  Mat layout6x;
+  Mat layout6x, layoutPaused;
   Mat morphERODE, morphDILATE;
   //x and y values for the location of the object
   //~ int x=0, y=0;
