@@ -190,15 +190,16 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
       drawObject(area, lastPoint, canvas);
       // Evaluate in which position of the grid the point is
       // state machine
-      // TOD CHECH bounding rectangles and contour to check the area!!!!
+      // TOD CHECk bounding rectangles and contour to evaluate it. Use the layout form PNG image!
+      // expression limits
       switch (trackState) {
         case TrackStt::NO_TRACK:
         case TrackStt::UNARMED:
-          if (lastPoint.x < EXP_HORI_LIMIT) {
+          if (lastPoint.x > EXP_HORI_L) {
             trackState = TrackStt::EXPRESSION;
             //~ cout << "Next state TrackStt::EXPRESSION" << endl; 
           }
-          else if (lastPoint.y < BBUTT_VER_LIMIT) {
+          else if (lastPoint.y > BUTT_VER_T && lastPoint.y < BUTT_VER_B) {
             trackState = TrackStt::ARMED;
             //~ cout << "Next state TrackStt::ARMED" << endl;
           }
@@ -207,23 +208,39 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
           }
           break;
         case TrackStt::ARMED:
-          if (lastPoint.x < EXP_HORI_LIMIT) {
+          if (lastPoint.x > EXP_HORI_L) {
             trackState = TrackStt::EXPRESSION;
           }
-          else if (lastPoint.y > BBUTT_VER_LIMIT) {
+          else if (lastPoint.y > BUTT_VER_B) {
             trackState = TrackStt::DEBOUNCING;
             debounceCounter = debouceFrames;
-            if (lastPoint.x < 2*FRAME_WIDTH/4) {
+            if (lastPoint.x < B1_HORI_R) {
               cout << "1" << endl; 
               retValue = "1";
             }
-            else if (lastPoint.x < 3*FRAME_WIDTH/4) {
+            else if (lastPoint.x < B2_HORI_R) {
               cout << "2" << endl; 
               retValue = "2";
             }
-            else {
+            else if (lastPoint.x < B3_HORI_R) {
               cout << "3" << endl; 
               retValue = "3";
+            }
+            else if (lastPoint.x < B4_HORI_R) {
+              cout << "4" << endl; 
+              retValue = "5";
+            }
+          }
+          else if (lastPoint.y < BUTT_VER_T) {
+            trackState = TrackStt::DEBOUNCING;
+            debounceCounter = debouceFrames;
+            if (lastPoint.x < B5_HORI_R) {
+              cout << "5" << endl; 
+              retValue = "5";
+            }
+            else if (lastPoint.x > B6_HORI_L && lastPoint.x < B6_HORI_R) {
+              cout << "6" << endl; 
+              retValue = "6";
             }
           }
           break;
@@ -233,17 +250,17 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
             trackState = TrackStt::UNARMED;
           break;
         case TrackStt::EXPRESSION: 
-          if (lastPoint.x > EXP_HORI_LIMIT) {
+          if (lastPoint.x < EXP_HORI_L) {
               trackState = TrackStt::UNARMED;
           }
           else{ 
             int expLevel;
-            if (lastPoint.y > EXP_VER_HIGH) 
+            if (lastPoint.y > EXP_VER_B) 
               expLevel = 0;
-            else if (lastPoint.y < EXP_VER_LOW)
+            else if (lastPoint.y < EXP_VER_T)
               expLevel = expressionDiv-1;
             else {
-              float ylevel = (float)(lastPoint.y-EXP_VER_LOW)/(float)(EXP_VER_RANGE);
+              float ylevel = (float)(lastPoint.y-EXP_VER_T)/(float)(EXP_VER_RANGE);
               expLevel = (int)((float)(expressionDiv-1)*(1.0 - ylevel));
             }
             cout << "Expression level:" << expLevel << endl; 
@@ -279,6 +296,7 @@ void OCV::drawObject(int area, Point point, Mat &frame){
 }
 
 
+/*
 void OCV::drawCmdAreas(Mat &frame){
   //~ line(frame, Point(0, FRAME_HEIGHT/3), Point(FRAME_WIDTH, FRAME_HEIGHT/3), Scalar(255,255,0),2);
   //~ line(frame, Point(0, 2*FRAME_HEIGHT/3), Point(FRAME_WIDTH, 2*FRAME_HEIGHT/3), Scalar(255,255,0),2);
@@ -293,7 +311,7 @@ void OCV::drawCmdAreas(Mat &frame){
   line(frame, Point(0, EXP_VER_LOW), Point(EXP_HORI_LIMIT, EXP_VER_LOW), Scalar(255,255,0),2);
   line(frame, Point(0, EXP_VER_HIGH), Point(EXP_HORI_LIMIT, EXP_VER_HIGH), Scalar(255,255,0),2);
 }
-
+*/
 
 int OCV::disable_exposure_auto_priority(const int dev) 
 {
