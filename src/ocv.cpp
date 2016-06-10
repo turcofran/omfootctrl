@@ -133,7 +133,7 @@ string OCV::readBLine(void)
   else 
     addWeighted(camFeed, 0.5, layoutPaused, 1, 0.0, camFeed);
 
-  addWeighted(camFeed, 1, layout6x, 0.5, 0.0, camFeed);
+  addWeighted(camFeed, 1, layout6x, 0.5, 0.0, camFeed);  // TODO it's nut add the frames each time!
   imshow(W_NAME_FEED, camFeed);
 
   //delay so that screen can refresh.
@@ -166,13 +166,13 @@ void OCV::erodeAndDilate(Mat &frame){
 }
 
 string OCV::trackAndEval(Mat &threshold, Mat &canvas){
-  Mat temp;
-  threshold.copyTo(temp);
+  //~ Mat temp;
+  //~ threshold.copyTo(temp);
   //these two vectors needed for output of findContours
   vector< vector<Point> > contours;
   vector<Vec4i> hierarchy;
   //find contours of filtered image using openCV findContours function
-  findContours(temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
+  findContours(threshold, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
   //use moments method to find our filtered object
   string retValue = "";
   double area;
@@ -254,6 +254,7 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
               trackState = TrackStt::UNARMED;
           }
           else{ 
+            // TODO make a previous level comparition
             int expLevel;
             if (lastPoint.y > EXP_VER_B) 
               expLevel = 0;
