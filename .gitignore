@@ -1,5 +1,7 @@
 info/
-maps/
+maps/map_roh.xml
+maps/map_sl_ardour.xml
+maps/map_solo_midi.xml
 run.sh
 sl_3loops_blank.slsess
 sl_3loops_blank_jackhost.slsess

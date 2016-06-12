@@ -1,0 +1,315 @@
+<!--
+
+Example for several banks
+
+Command map banks structure:
+
+  <commands_map_banks>
+    <bank name=...>
+      <command name="...">
+        <button>...</button>
+        <type>...</type>
+        <cmd>...</cmd>
+        <url>...</url>
+        <args>
+          <arg type="...">...</arg>
+          ...
+        </args>    
+      </command>
+      ...
+    </bank>
+    ...
+  <commands_map_banks>
+
+NOTE: if you want to use several banks, you must specify a "sel_next_bank" 
+command in each bank. Also "sel_prev_bank" can be used.
+
+-->
+<!DOCTYPE commands_map_banks>
+<commands_map_banks>
+  <bank name="bank_rec">
+   <command name="select_next_loop">
+      <button>1</button>
+      <type>osc</type>
+      <cmd>/sl/-2/set</cmd>
+      <args>
+        <arg type="s">select_next_loop</arg>
+        <arg type="f">0.0</arg>
+      </args>    
+    </command>
+    <command name="record">
+      <button>2</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">record</arg>
+      </args>    
+    </command>
+    <command name="undo">
+      <button>3</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">undo</arg>
+      </args>    
+    </command>
+    <command name="redo">
+      <button>4</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">redo</arg>
+      </args>    
+    </command>
+    <command name="sel_next_bank">
+      <button>5</button>
+      <type>internal</type>
+      <cmd>sel_next_bank</cmd>
+      <args></args>    
+    </command>
+    <command name="sel_prev_bank">
+      <button>6</button>
+      <type>internal</type>
+      <cmd>sel_prev_bank</cmd>
+      <args></args>    
+    </command>
+    <command name="CC_ch1_vol">
+      <button>X</button>
+      <type>midi</type>
+      <cmd>176</cmd>
+      <databytes>
+        <databyte>7</databyte>
+        <databyte>127</databyte>
+      </databytes>    
+    </command>
+  </bank>  
+  <bank name="bank_over">
+   <command name="select_next_loop">
+      <button>1</button>
+      <type>osc</type>
+      <cmd>/sl/-2/set</cmd>
+      <args>
+        <arg type="s">select_next_loop</arg>
+        <arg type="f">0.0</arg>
+      </args>    
+    </command>
+    <command name="overdub">
+      <button>2</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">overdub</arg>
+      </args>    
+    </command>
+    <command name="undo">
+      <button>3</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">undo</arg>
+      </args>    
+    </command>
+    <command name="redo">
+      <button>4</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">redo</arg>
+      </args>    
+    </command>
+    <command name="sel_next_bank">
+      <button>5</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="sel_prev_bank">
+      <button>6</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="CC_ch1_vol">
+      <button>X</button>
+      <type>midi</type>
+      <cmd>176</cmd>
+      <databytes>
+        <databyte>7</databyte>
+        <databyte>127</databyte>
+      </databytes>    
+    </command>
+  </bank>  
+  <bank name="bank_handle">
+    <command name="pause_all_loops">
+      <button>1</button>
+      <type>osc</type>
+      <cmd>/sl/-1/hit</cmd>
+      <args>
+        <arg type="s">pause</arg>
+      </args>    
+    </command>
+    <command name="trigger_all_loops">
+      <button>2</button>
+      <type>osc</type>
+      <cmd>/sl/-1/hit</cmd>
+      <args>
+        <arg type="s">trigger</arg>
+      </args>    
+    </command>
+    <command name="solo_selected_loop">
+      <button>3</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">solo</arg>
+      </args>    
+    </command>
+    <command name="undo">
+      <button>4</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">undo</arg>
+      </args>    
+    </command>
+    <command name="sel_next_bank">
+      <button>5</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="sel_prev_bank">
+      <button>6</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="rate">
+      <button>X</button>
+      <type>osc</type>
+      <cmd>/sl/-3/set</cmd>
+      <args>
+        <arg type="s">rate</arg>
+        <arg type="f" min="0.25" max="4.0">1.0</arg>
+      </args>    
+    </command>
+  </bank>  
+  <bank name="bank_midi_1">
+    <command name="CC_ch1_sustain_ON">
+      <button>1</button>
+      <type>midi</type>
+      <cmd>176</cmd>
+      <databytes>
+        <databyte>64</databyte>
+        <databyte>127</databyte>
+      </databytes>    
+    </command>
+    <command name="CC_ch1_sustain_OFF">
+      <button>2</button>
+      <type>midi</type>
+      <cmd>176</cmd>
+      <databytes>
+        <databyte>64</databyte>
+        <databyte>0</databyte>
+      </databytes>    
+    </command>
+    <command name="CC_ch1_portamento_ON">
+      <button>3</button>
+      <type>midi</type>
+      <cmd>176</cmd>
+      <databytes>
+        <databyte>65</databyte>
+        <databyte>127</databyte>
+      </databytes>    
+    </command>
+    <command name="CC_ch1_portamento_OFF">
+      <button>4</button>
+      <type>midi</type>
+      <cmd>176</cmd>
+      <databytes>
+        <databyte>65</databyte>
+        <databyte>0</databyte>
+      </databytes>    
+    </command>
+    <command name="sel_next_bank">
+      <button>5</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="sel_prev_bank">
+      <button>6</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="CC_ch1_vol">
+      <button>X</button>
+      <type>midi</type>
+      <cmd>176</cmd>
+      <databytes>
+        <databyte>7</databyte>
+        <databyte>127</databyte>
+      </databytes>    
+    </command>
+  </bank>  
+  <bank name="bank_midi_2">
+    <command name="noteON_ch1_C3">
+      <button>1</button>
+      <type>midi</type>
+      <cmd>144</cmd>
+      <databytes>
+        <databyte>36</databyte>
+        <databyte>64</databyte>
+      </databytes>    
+    </command>
+    <command name="noteOFF_ch1_C3">
+      <button>2</button>
+      <type>midi</type>
+      <cmd>128</cmd>
+      <databytes>
+        <databyte>36</databyte>
+        <databyte>64</databyte>
+      </databytes>    
+    </command>
+    <command name="noteON_ch1_C4">
+      <button>3</button>
+      <type>midi</type>
+      <cmd>144</cmd>
+      <databytes>
+        <databyte>48</databyte>
+        <databyte>64</databyte>
+      </databytes>    
+    </command>
+    <command name="noteOFF_ch1_C4">
+      <button>4</button>
+      <type>midi</type>
+      <cmd>128</cmd>
+      <databytes>
+        <databyte>48</databyte>
+        <databyte>64</databyte>
+      </databytes>    
+    </command>
+    <command name="sel_next_bank">
+      <button>5</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="sel_prev_bank">
+      <button>6</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="CC_ch1_vol">
+      <button>X</button>
+      <type>midi</type>
+      <cmd>176</cmd>
+      <databytes>
+        <databyte>7</databyte>
+        <databyte>127</databyte>
+      </databytes>    
+    </command>
+  </bank>  
+</commands_map_banks> 

@@ -1,0 +1,200 @@
+<!--
+
+Example for several banks
+
+Command map banks structure:
+
+  <commands_map_banks>
+    <bank name=...>
+      <command name="...">
+        <button>...</button>
+        <type>...</type>
+        <cmd>...</cmd>
+        <url>...</url>
+        <args>
+          <arg type="...">...</arg>
+          ...
+        </args>    
+      </command>
+      ...
+    </bank>
+    ...
+  <commands_map_banks>
+
+NOTE: if you want to use several banks, you must specify a "sel_next_bank" 
+command in each bank. Also "sel_prev_bank" can be used.
+
+-->
+<!DOCTYPE commands_map_banks>
+<commands_map_banks>
+  <bank name="bank_rec_or_over">
+   <command name="select_next_loop">
+      <button>1</button>
+      <type>osc</type>
+      <cmd>/sl/-2/set</cmd>
+      <args>
+        <arg type="s">select_next_loop</arg>
+        <arg type="f">0.0</arg>
+      </args>    
+    </command>
+    <command name="rec_over">
+      <button>2</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">record_or_overdub</arg>
+      </args>    
+    </command>
+    <command name="undo">
+      <button>3</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">undo</arg>
+      </args>    
+    </command>
+   <command name="select_prev_loop">
+      <button>4</button>
+      <type>osc</type>
+      <cmd>/sl/-2/set</cmd>
+      <args>
+        <arg type="s">select_prev_loop</arg>
+        <arg type="f">0.0</arg>
+      </args>    
+    </command>
+    <command name="sel_next_bank">
+      <button>5</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="sel_prev_bank">
+      <button>6</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="wet">
+      <button>X</button>
+      <type>osc</type>
+      <cmd>/sl/-3/set</cmd>
+      <args>
+        <arg type="s">wet</arg>
+        <arg type="f" min="0.0" max="1.0">1.0</arg>
+      </args>    
+    </command>
+  </bank>  
+  <bank name="bank_rec">
+   <command name="select_next_loop">
+      <button>1</button>
+      <type>osc</type>
+      <cmd>/sl/-2/set</cmd>
+      <args>
+        <arg type="s">select_next_loop</arg>
+        <arg type="f">0.0</arg>
+      </args>    
+    </command>
+    <command name="record">
+      <button>2</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">record</arg>
+      </args>    
+    </command>
+    <command name="undo">
+      <button>3</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">undo</arg>
+      </args>    
+    </command>
+   <command name="select_prev_loop">
+      <button>4</button>
+      <type>osc</type>
+      <cmd>/sl/-2/set</cmd>
+      <args>
+        <arg type="s">select_prev_loop</arg>
+        <arg type="f">0.0</arg>
+      </args>    
+    </command>
+    <command name="sel_next_bank">
+      <button>5</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="sel_prev_bank">
+      <button>6</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="pitch_shift">
+      <button>X</button>
+      <type>osc</type>
+      <cmd>/sl/-1/set</cmd>
+      <args>
+        <arg type="s">pitch_shift</arg>
+        <arg type="f" min="-12.0" max="12.0">0.0</arg>
+      </args>    
+    </command>
+  </bank>  
+  <bank name="bank_handle">
+   <command name="select_next_loop">
+      <button>1</button>
+      <type>osc</type>
+      <cmd>/sl/-2/set</cmd>
+      <args>
+        <arg type="s">select_next_loop</arg>
+        <arg type="f">0.0</arg>
+      </args>    
+    </command>
+    <command name="pause_all_loops">
+      <button>2</button>
+      <type>osc</type>
+      <cmd>/sl/-1/hit</cmd>
+      <args>
+        <arg type="s">pause</arg>
+      </args>    
+    </command>
+    <command name="trigger_all_loops">
+      <button>3</button>
+      <type>osc</type>
+      <cmd>/sl/-1/hit</cmd>
+      <args>
+        <arg type="s">trigger</arg>
+      </args>    
+    </command>
+    <command name="solo_selected_loop">
+      <button>4</button>
+      <type>osc</type>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">solo</arg>
+      </args>    
+    </command>
+    <command name="sel_next_bank">
+      <button>5</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="sel_prev_bank">
+      <button>6</button>
+      <type>internal</type>
+      <cmd></cmd>
+      <args></args>    
+    </command>
+    <command name="rate">
+      <button>X</button>
+      <type>osc</type>
+      <cmd>/sl/-3/set</cmd>
+      <args>
+        <arg type="s">rate</arg>
+        <arg type="f" min="0.25" max="4.0">1.0</arg>
+      </args>    
+    </command>
+  </bank>  
+</commands_map_banks>

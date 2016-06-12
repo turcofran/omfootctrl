@@ -23,7 +23,8 @@ OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressio
 {
   expressionDiv = expressiondiv;
   verbose = verb;
-
+  paused = false;
+  
   if (readHSVFilterConf(hsvFilterConfFile)!=0) {
     cerr << "WARNING! Not possible to read configuration file with HSV range. Default bounds will be used." << endl;
     hsvRange.lowerb = Scalar(DEF_H_MIN, DEF_S_MIN, DEF_V_MIN);
@@ -147,6 +148,7 @@ string OCV::readBLine(void)
   #else  
     keyPressed = waitKey(CV_DELAY_MS);
   #endif
+  //~ cout << "keyPressed: " << to_string(keyPressed) << endl;
   switch(keyPressed) {
     case 27: exit(0); break;
     case 32: paused = !paused; break;
