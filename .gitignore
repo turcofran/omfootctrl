@@ -15,3 +15,4 @@ src/ocv_config.hpp
 src/sample.avi
 src/sample/
 src/ut_cmdmap.cpp
+src/_README.txt

@@ -1,0 +1,63 @@
+<!--
+
+Very simple example for only one bank
+
+Command map banks structure:
+
+  <commands_map_banks>
+    <bank name=...>
+      <command name="...">
+        <button>...</button>
+        <cmd>...</cmd>
+        <url>...</url>
+        <args>
+          <arg type="...">...</arg>
+          ...
+        </args>    
+      </command>
+      ...
+    </bank>
+    ...
+  <commands_map_banks>
+
+NOTE: if you want to use several banks, you must specify a "sel_next_bank" 
+command in each bank. Also "sel_prev_bank" can be used. 
+
+-->
+<!DOCTYPE commands_map_banks>
+<commands_map_banks>
+  <bank name="standar">
+    <command name="select_next_loop">
+      <button>1</button>
+      <cmd>/sl/-2/set</cmd>
+      <args>
+        <arg type="s">select_next_loop</arg>
+        <arg type="f">0.0</arg>
+      </args>    
+    </command>
+    <command name="record">
+      <button>2</button>
+      <url>osc.udp://localhost:9951/</url>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">record</arg>
+      </args>    
+    </command>
+    <command name="overdub">
+      <button>3</button>
+      <url>osc.udp://localhost:9951/</url>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">overdub</arg>
+      </args>    
+    </command>
+    <command name="undo">
+      <button>4</button>
+      <url>osc.udp://localhost:9951/</url>
+      <cmd>/sl/-3/hit</cmd>
+      <args>
+        <arg type="s">undo</arg>
+      </args>    
+    </command>
+  </bank>
+</commands_map_banks>
