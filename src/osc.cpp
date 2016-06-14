@@ -36,9 +36,10 @@ bool OSC::parseAndSendMess(string arrivedin, cmdmap::command cmdin) throw(ExOSC)
       case 'f':
         //lo_message_add_float(mess, atof(arg.value.c_str()));
         if((arrivedin.size()>1) && arg.range){
-          if (arrivedin[1]>=expressDiv) // This is an error condition 
-            arrivedin[1]=expressDiv-1;
-          farg = (float)arrivedin[1]*(arg.max-arg.min)/(expressDiv-1) + arg.min;
+          int value = atoi(arrivedin.substr(1, arrivedin.size() - 1).c_str());
+          if (value  >= expressDiv) // This is an error condition 
+            value=expressDiv-1;
+          farg = (float)value*(arg.max-arg.min)/(expressDiv-1) + arg.min;
           sendExpression = true;
         }
         else{

@@ -134,7 +134,7 @@ command in each bank. Also "sel_prev_bank" can be used.
     <command name="pitch_shift">
       <button>X</button>
       <type>osc</type>
-      <cmd>/sl/-1/set</cmd>
+      <cmd>/sl/-3/set</cmd>
       <args>
         <arg type="s">pitch_shift</arg>
         <arg type="f" min="-12.0" max="12.0">0.0</arg>

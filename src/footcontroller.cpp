@@ -29,7 +29,7 @@ FootController::FootController(const int incamdev, const int  baudrate,
     aBank = cmap->getFirstBank(); 
     cmap->printSelBank(verbose);
     // Create midi device
-    //midiDev = new MIDI(MIDI_CLIENT_NAME, expressiondiv, verbose);
+    midiDev = new MIDI(MIDI_CLIENT_NAME, expressiondiv, verbose);
     // Create osc device
     oscDev = new OSC(defoscserv, expressiondiv, verbose);
     // Create an UDP socket for GUI in localhost
@@ -88,10 +88,7 @@ void FootController::processInput(void)
               sTempCmd += "," ;
               sTempCmd += aBank->name;
               if(sendExpression2GUI){
-                //~ char cExpressVal[3];
-                //~ sprintf(cExpressVal, "%d", arrivedCmd[1]);
-                //~ sTempCmd += "," ;
-                //~ sTempCmd += cExpressVal;
+                char cExpressVal[3];
                 sTempCmd += "," ;
                 sTempCmd += arrivedCmd.substr(1, arrivedCmd.size() - 1);
               }

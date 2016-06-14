@@ -53,10 +53,14 @@ bool MIDI::parseAndSendMess(string arrivedin, cmdmap::command cmdin) throw(ExMID
            throw(ExMIDI("Bad formed CC MIDI message"));
         midiBuffer[cdbqtt++] = cmdin.databytes.front(); // controller number
         cmdin.databytes.pop_front();
-        if (arrivedin[1]>=expressDiv) // This is an error condition 
-           arrivedin[1]=expressDiv-1;
-        midiBuffer[cdbqtt++] = arrivedin[1]*MIDI_MAX_VALUE/(expressDiv-1); //value 
-        sendExpression = true;
+        //~ if (arrivedin[1]>=expressDiv) // This is an error condition 
+           //~ arrivedin[1]=expressDiv-1;
+        //~ midiBuffer[cdbqtt++] = arrivedin[1]*MIDI_MAX_VALUE/(expressDiv-1); //value 
+        int value = atoi(arrivedin.substr(1, arrivedin.size() - 1).c_str());
+        if (value  >= expressDiv) // This is an error condition 
+          value=expressDiv-1;
+        midiBuffer[cdbqtt++] = value*MIDI_MAX_VALUE/(expressDiv-1); //value 
+        sendExpression = true;        
       }
       // Program change message
       else if ((midiBuffer[0] >= MIDI_PC_MIN) && (midiBuffer[0] <= MIDI_PC_MAX)){

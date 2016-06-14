@@ -141,7 +141,7 @@ protected:
 private:
  
   bool verbose;
-  int expressionDiv;
+  int expressionDiv, lastExLevel;
   
   // OpenCV realted objects
   VideoCapture videoCap;

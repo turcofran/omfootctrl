@@ -22,6 +22,7 @@ int sLowerbTrackebar = DEF_S_MIN; // TODO this is not coherent!
 OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressiondiv, const bool verb)  throw(ExOCV)
 {
   expressionDiv = expressiondiv;
+  lastExLevel=0;
   verbose = verb;
   paused = false;
   
@@ -134,7 +135,7 @@ string OCV::readBLine(void)
   else 
     addWeighted(camFeed, 0.5, layoutPaused, 1, 0.0, camFeed);
 
-  addWeighted(camFeed, 1, layout6x, 0.5, 0.0, camFeed);  // TODO it's nut add the frames each time!
+  addWeighted(camFeed, 0.8, layout6x, 0.7, 0.0, camFeed);  // TODO it's nut add the frames each time!
   imshow(W_NAME_FEED, camFeed);
 
   //delay so that screen can refresh.
@@ -266,8 +267,11 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
               float ylevel = (float)(lastPoint.y-EXP_VER_T)/(float)(EXP_VER_RANGE);
               expLevel = (int)((float)(expressionDiv-1)*(1.0 - ylevel));
             }
-            cout << "Expression level:" << expLevel << endl; 
-            retValue = "X"+to_string(expLevel);
+            if (expLevel!=lastExLevel) {
+              cout << "Expression level:" << expLevel << endl; 
+              retValue = "X"+to_string(expLevel);
+              lastExLevel = expLevel;
+            }
           }
           break;
         default: 
