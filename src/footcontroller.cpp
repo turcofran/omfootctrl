@@ -18,7 +18,7 @@ FootController::FootController(const int incamdev, const int  baudrate,
 {
   namespace bip = boost::asio::ip;
   verbose = verb;
-  noGUI = noGUI;
+  noGUI = nogui;
   try
   {
     // Get serial port
