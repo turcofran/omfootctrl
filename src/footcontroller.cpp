@@ -29,7 +29,14 @@ FootController::FootController(const int incamdev, const int  baudrate,
     aBank = cmap->getFirstBank(); 
     cmap->printSelBank(verbose);
     // Create midi device
-    midiDev = new MIDI(MIDI_CLIENT_NAME, expressiondiv, verbose);
+    try 
+    {
+      midiDev = new MIDI(MIDI_CLIENT_NAME, expressiondiv, verbose);
+    }
+    catch (const ExMIDI &e)
+    {
+      cerr << "WARNING: " << e.what() << endl;
+    }
     // Create osc device
     oscDev = new OSC(defoscserv, expressiondiv, verbose);
     // Create an UDP socket for GUI in localhost
@@ -42,7 +49,7 @@ FootController::FootController(const int incamdev, const int  baudrate,
   }
   catch (const exception &e)
   {
-    throw(ExFootController(e.what())); 
+    throw(ExFootController(e.what()));
   }
 }
 

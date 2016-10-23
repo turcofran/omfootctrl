@@ -34,6 +34,8 @@
     $ ./oscbridge
   To get help, use:
     $ ./oscbridge -h
+  
+  TODO update comments
 
 *******************************************************************************/
 #include <iostream>
@@ -51,7 +53,7 @@ using namespace std;
 
 int main(int ac, char* av[])
 {
-  const int cCAMDEV = 1;
+  const int cCAMDEV = 0;
   const string cDEF_OSC_SERVER_ADDR = "osc.udp://localhost:9951/";
   const int cBAUD_RATE  = 9600;
   const int cGUI_PORT  = 5151;
@@ -80,8 +82,7 @@ int main(int ac, char* av[])
     ("no-gui,n", "Does not notify to any graphic user interface")
     ("osc-addr,a", po::value(&osc_adress_def), "Set OSC server default address")
     ("map-file,m", po::value(&map), "Set commands map file")
-    ("verbose,v", "Set verbose mode")
-  ;
+    ("verbose,v", "Set verbose mode");
   po::variables_map vm;        
   po::store(po::parse_command_line(ac, av, desc), vm);
   po::notify(vm);    

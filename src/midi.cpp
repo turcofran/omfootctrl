@@ -18,12 +18,12 @@ MIDI::MIDI(const string name, const int expressiondiv, const bool verb)  throw(E
   {
     midiCDBQtt=0;
     if((jMidiClient = jack_client_open(clientName.c_str(), JackNullOption, NULL)) == 0){
-	    throw(ExMIDI("MIDI client cannot be created, JACK server not running?\n"));
+      throw(ExMIDI("MIDI client cannot be created, JACK server not running?\n"));
     }
     jack_set_process_callback(jMidiClient, _jMidiProcess, this);
     jMidiOutPort = jack_port_register(jMidiClient, "midi_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
     if (jack_activate(jMidiClient)){
-	    throw(ExMIDI("Cannot activate MIDI client"));
+      throw(ExMIDI("Cannot activate MIDI client"));
     }
   }
   catch (const exception &e)
