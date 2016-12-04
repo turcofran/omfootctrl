@@ -41,6 +41,8 @@
 #ifndef CMD_MAP_H_
 #define CMD_MAP_H_
 
+#define SHORT_NAME_MAX 4
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
@@ -64,6 +66,7 @@ typedef struct{
 // typedef for commands
 typedef struct{
   string name;
+  string shortname;
   //cmdTypeEnum type;
   string type;
   char button;
@@ -77,6 +80,7 @@ typedef struct{
 typedef struct{
   string name;
   list<command> cmmds;
+  vector<command> cmmds_v; // FIXME temp duplication for names printing
 } bank;
 
 }
@@ -101,16 +105,20 @@ public:
     BOOST_FOREACH(ptree::value_type &b, pt.get_child("commands_map_banks")){
       cmdmap::bank abank;
       if(b.first == "bank"){ 
-        // this bank has any name?
+        // has this bank any name?
         boost::optional<string> bankName = 
             b.second.get_optional<string>("<xmlattr>.name");
         if(bankName) abank.name = *bankName;
         else abank.name = "unnamed";
+        // has this bank any short name?
         // search for each command inside the bank
         BOOST_FOREACH(ptree::value_type &c, b.second){
           if (c.first == "command"){
             cmdmap::command acmd;
             acmd.name = c.second.get<string>("<xmlattr>.name");
+            boost::optional<string> bankShortName = 
+               c.second.get_optional<string>("<xmlattr>.shortname");
+            if(bankShortName) acmd.shortname = validateShortName(*bankShortName);
             acmd.button = c.second.get<char>("button");
             acmd.cmd = c.second.get<string>("cmd");
             // optional url
@@ -164,6 +172,7 @@ public:
                }
             }   
             abank.cmmds.push_back(acmd);
+            abank.cmmds_v.push_back(acmd);
           }
         }
         banks.push_back(abank);
@@ -246,6 +255,17 @@ public:
       cout << " - " << acmd.button << ": " << acmd.name << endl;
     }
   } 
+
+  // validate command short name 
+  string validateShortName(string sn) {
+    int len = sn.length();
+    if (len > SHORT_NAME_MAX) {
+      return sn.substr(SHORT_NAME_MAX);
+    }
+    else { 
+      return sn;
+    }
+  }
 
 };
 #endif 

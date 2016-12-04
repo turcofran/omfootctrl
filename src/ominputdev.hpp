@@ -10,9 +10,12 @@
 #ifndef OMINPUTDEV_H_
 #define OMINPUTDEV_H_
 
+#include "cmdmap.hpp"
+
 class OMInputDev {
  public:
   virtual std::string readBLine()=0;
+  virtual void printCmdNames(const cmdmap::bank *)=0;
 };
 
 #endif 

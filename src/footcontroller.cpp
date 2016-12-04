@@ -28,6 +28,7 @@ FootController::FootController(const int incamdev, const int  baudrate,
     cmap = new CmdMap(map);
     aBank = cmap->getFirstBank(); 
     cmap->printSelBank(verbose);
+    inputDev->printCmdNames(aBank);
     // Create midi device
     try 
     {
@@ -69,11 +70,13 @@ void FootController::processInput(void)
           if(cmapIt.name=="sel_next_bank"){   
               aBank = cmap->getNextBank();
               cmap->printSelBank(verbose);
+              inputDev->printCmdNames(aBank);
           }
           // Select previous commands map bank
           else if(cmapIt.name=="sel_prev_bank"){ 
               aBank = cmap->getPrevBank();
               cmap->printSelBank(verbose);
+              inputDev->printCmdNames(aBank);
           }
         } 
         // Midi command

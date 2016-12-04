@@ -59,14 +59,14 @@ const int DEF_V_MAX = 256;
 const int FRAME_WIDTH = 640/2;
 const int FRAME_HEIGHT = 480/2;
 // expression limits
-const int EXP_VER_T = 50;
-const int EXP_VER_B = 210;
+const int EXP_VER_T = 0;
+const int EXP_VER_B = 160;
 const int EXP_VER_RANGE = EXP_VER_B-EXP_VER_T;
 const int EXP_HORI_L = 260;
 const int EXP_HORI_R = 320;
 // Buttons limits
-const int BUTT_VER_B = 160; // bottom
-const int BUTT_VER_T = 80; // top 
+const int BUTT_VER_B = 100; // bottom
+const int BUTT_VER_T = 50; // top 
 const int B1_HORI_L = 0;
 const int B1_HORI_R = 65;
 const int B2_HORI_L = 65;
@@ -83,7 +83,7 @@ const int B6_HORI_R = 260;
 const int MAX_NUM_OBJECTS=1;
 //delay between frames, in ms
 const int DEF_FRAME_INT_US=33333;
-const int DEBOUNCE_TIME_MS=500;
+const int DEBOUNCE_TIME_MS=50;
 const int CV_DELAY_MS=1;
 //Circular buffer CAPACITY
 const int CB_CAPACITY=10;
@@ -97,7 +97,7 @@ const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
 const string W_NAME_FEED = "OM OpenCV - Feed";
 const string W_NAME_THRESHOLD = "Thresholded Image";
 const string W_NAME_HSV = "OM OpenCV - HSV";
-const string LAYOUT_PNG_NAME = "img/layout6x.png";
+const string LAYOUT_PNG_NAME = "img/layout6xplain.png";
 const string PAUSED_PNG_NAME = "img/paused.png";
 
 enum class TrackStt {NO_TRACK, UNARMED, ARMED, DEBOUNCING, TRIGGER, EXPRESSION};
@@ -123,6 +123,8 @@ public:
   OCV(const int incamdev, const string hsvRangeFile, const int expressiondiv, const bool verb)  throw(ExOCV);  
   string readBLine(void);
   static int get_png(Mat & inmat, string filename);
+  void printCmdNames(const cmdmap::bank * currentBank);
+
   
 protected: 
 
@@ -157,7 +159,7 @@ private:
   // Canvas matrix
   //~ Mat canvas;
   // Structuring elements for morphological operations
-  Mat layout6x, layoutPaused;
+  Mat layout6x, layoutPaused, layout6xcmds;
   Mat morphERODE, morphDILATE;
   //x and y values for the location of the object
   //~ int x=0, y=0;

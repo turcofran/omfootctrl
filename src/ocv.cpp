@@ -100,6 +100,17 @@ OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressio
   }
 }
 
+void OCV::printCmdNames(const cmdmap::bank * currentBank) {
+  layout6x.copyTo(layout6xcmds);
+  putText(layout6xcmds, currentBank->cmmds_v[0].shortname , Point(B1_HORI_L+15, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[1].shortname , Point(B2_HORI_L+15, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[2].shortname , Point(B3_HORI_L+15, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[3].shortname , Point(B4_HORI_L+15, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[4].shortname , Point(B5_HORI_L+15, BUTT_VER_T-20 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[5].shortname , Point(B6_HORI_L+15, BUTT_VER_T-20 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[6].shortname , Point(EXP_HORI_L+15, FRAME_HEIGHT/2-20 ), 1, 1, Scalar(0,0,0), 2);
+}
+
 // Process input
 string OCV::readBLine(void)
 {
@@ -135,11 +146,14 @@ string OCV::readBLine(void)
   else 
     addWeighted(camFeed, 0.5, layoutPaused, 1, 0.0, camFeed);
 
-  addWeighted(camFeed, 0.8, layout6x, 0.7, 0.0, camFeed);  // TODO it's nut add the frames each time!
+  //addWeighted(camFeed, 0.8, layout6x, 0.7, 0.0, camFeed);  // TODO it's nut add the frames each time!
+  addWeighted(camFeed, 0.8, layout6xcmds, 0.7, 0.0, camFeed);
+
+  
   imshow(W_NAME_FEED, camFeed);
 
   //delay so that screen can refresh.
-  #ifdef SHOW_WIN
+  #ifdef SHOW_WIN // Overwrite this macro with $ cmake -DSHOW_WIN=0 . 
     imshow(W_NAME_HSV, procHSV);
     imshow(W_NAME_THRESHOLD, procThreshold);
   #endif
@@ -193,10 +207,11 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
       drawObject(area, lastPoint, canvas);
       // Evaluate in which position of the grid the point is
       // state machine
-      // TOD CHECk bounding rectangles and contour to evaluate it. Use the layout form PNG image!
+      // TODO CHECk bounding rectangles and contour to evaluate it. Use the layout form PNG image!
       // expression limits
       switch (trackState) {
         case TrackStt::NO_TRACK:
+          cout << "TrackStt::NO_TRACK" << endl;
         case TrackStt::UNARMED:
           if (lastPoint.x > EXP_HORI_L) {
             trackState = TrackStt::EXPRESSION;
@@ -204,7 +219,7 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
           }
           else if (lastPoint.y > BUTT_VER_T && lastPoint.y < BUTT_VER_B) {
             trackState = TrackStt::ARMED;
-            //~ cout << "Next state TrackStt::ARMED" << endl;
+            cout << "Next state TrackStt::ARMED" << endl;
           }
           else {
             trackState = TrackStt::UNARMED;
@@ -283,6 +298,7 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
       if (trackState!=TrackStt::DEBOUNCING) trackState = TrackStt::NO_TRACK;
       //void putText(Mat& img, const string& text, Point org, int fontFace, double fontScale, Scalar color, int thickness=1, int lineType=8, bool bottomLeftOrigin=false )
       putText(canvas, "More than one object detected!", Point(2, FRAME_HEIGHT-10), 1, 0.7, Scalar(0,0,255), 1);
+      cout << "More than one object detected! Next state is TrackStt::NO_TRACK" << endl; 
     }
   }
   if (trackState!=TrackStt::DEBOUNCING) trackState = TrackStt::NO_TRACK;
