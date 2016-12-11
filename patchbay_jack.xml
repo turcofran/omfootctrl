@@ -1,0 +1,108 @@
+<!DOCTYPE patchbay>
+<patchbay version="0.3.12" name="recordmydesktop">
+ <output-sockets>
+  <socket exclusive="off" client="system" type="jack-audio" name="system">
+   <plug>capture_1</plug>
+   <plug>capture_2</plug>
+  </socket>
+  <socket exclusive="off" client="sooperlooper" type="jack-audio" name="sooperlooper">
+   <plug>common_out_1</plug>
+   <plug>common_out_2</plug>
+   <plug>loop0_out_1</plug>
+   <plug>loop1_out_1</plug>
+   <plug>loop2_out_1</plug>
+  </socket>
+  <socket exclusive="off" client="Hydrogen" type="jack-audio" name="Hydrogen">
+   <plug>out_L</plug>
+  </socket>
+  <socket exclusive="off" client="qsynth" type="jack-audio" name="qsynth">
+   <plug>l_00</plug>
+  </socket>
+  <socket exclusive="off" client="amsynth" type="jack-audio" name="amsynth">
+   <plug>L out</plug>
+   <plug>R out</plug>
+  </socket>
+  <socket exclusive="off" client="V25" type="alsa-midi" name="V25 MIDI 1">
+   <plug>V25 MIDI 1</plug>
+  </socket>
+  <socket exclusive="off" client="system" type="jack-audio" name="system 2">
+   <plug>capture_1</plug>
+   <plug>capture_1</plug>
+   <plug>capture_2</plug>
+   <plug>capture_2</plug>
+  </socket>
+  <socket exclusive="off" client="sooperlooper" type="jack-audio" name="sooperlooper 2">
+   <plug>common_out_1</plug>
+   <plug>common_out_1</plug>
+  </socket>
+  <socket exclusive="off" client="Midi Through" type="alsa-midi" name="Midi Through">
+   <plug>Midi Through Port-0</plug>
+  </socket>
+  <socket exclusive="off" client="FastTrack Pro" type="alsa-midi" name="FastTrack Pro">
+   <plug>FastTrack Pro MIDI 1</plug>
+  </socket>
+  <socket exclusive="off" client="sooperlooper" type="alsa-midi" name="sooperlooper">
+   <plug>sooperlooper</plug>
+  </socket>
+ </output-sockets>
+ <input-sockets>
+  <socket exclusive="off" client="system" type="jack-audio" name="system">
+   <plug>playback_1</plug>
+   <plug>playback_2</plug>
+  </socket>
+  <socket exclusive="off" client="sooperlooper" type="jack-audio" name="sooperlooper">
+   <plug>common_in_1</plug>
+   <plug>common_in_2</plug>
+   <plug>loop0_in_1</plug>
+   <plug>loop1_in_1</plug>
+   <plug>loop2_in_1</plug>
+  </socket>
+  <socket exclusive="off" client="amsynth" type="alsa-midi" name="amsynth">
+   <plug>MIDI IN</plug>
+  </socket>
+  <socket exclusive="off" client="recordMyDesktop-[0-9]+" type="jack-audio" name="recordMyDesktop-16085">
+   <plug>input_1</plug>
+  </socket>
+  <socket exclusive="off" client="FLUID Synth \([0-9]+\)" type="alsa-midi" name="FLUID Synth ">
+   <plug>Synth input port \([0-9]+:0\)</plug>
+  </socket>
+  <socket exclusive="off" client="sooperlooper" type="jack-audio" name="sooperlooper 2">
+   <plug>common_in_1</plug>
+   <plug>common_in_2</plug>
+   <plug>common_in_2</plug>
+   <plug>common_in_1</plug>
+  </socket>
+  <socket exclusive="off" client="Midi Through" type="alsa-midi" name="Midi Through">
+   <plug>Midi Through Port-0</plug>
+  </socket>
+  <socket exclusive="off" client="FastTrack Pro" type="alsa-midi" name="FastTrack Pro">
+   <plug>FastTrack Pro MIDI 1</plug>
+  </socket>
+  <socket exclusive="off" client="TiMidity" type="alsa-midi" name="TiMidity">
+   <plug>TiMidity port 0</plug>
+   <plug>TiMidity port 1</plug>
+   <plug>TiMidity port 2</plug>
+   <plug>TiMidity port 3</plug>
+  </socket>
+  <socket exclusive="off" client="sooperlooper" type="alsa-midi" name="sooperlooper">
+   <plug>sooperlooper</plug>
+  </socket>
+ </input-sockets>
+ <slots/>
+ <cables>
+  <cable output="system" input="recordMyDesktop-16085" type="jack-audio"/>
+  <cable output="sooperlooper" input="recordMyDesktop-16085" type="jack-audio"/>
+  <cable output="system 2" input="sooperlooper 2" type="jack-audio"/>
+  <cable output="system 2" input="system" type="jack-audio"/>
+  <cable output="sooperlooper 2" input="system" type="jack-audio"/>
+  <cable output="Hydrogen" input="recordMyDesktop-16085" type="jack-audio"/>
+  <cable output="qsynth" input="recordMyDesktop-16085" type="jack-audio"/>
+  <cable output="qsynth" input="sooperlooper 2" type="jack-audio"/>
+  <cable output="V25 MIDI 1" input="FLUID Synth " type="alsa-midi"/>
+  <cable output="V25 MIDI 1" input="amsynth" type="alsa-midi"/>
+  <cable output="amsynth" input="system" type="jack-audio"/>
+  <cable output="amsynth" input="sooperlooper" type="jack-audio"/>
+  <cable output="amsynth" input="recordMyDesktop-16085" type="jack-audio"/>
+ </cables>
+</patchbay>
+
