@@ -63,22 +63,22 @@ const int EXP_VER_T = 0;
 const int EXP_VER_B = 160;
 const int EXP_VER_RANGE = EXP_VER_B-EXP_VER_T;
 const int EXP_HORI_L = 260;
-const int EXP_HORI_R = 320;
+const int EXP_HORI_R = 310;
 // Buttons limits
 const int BUTT_VER_B = 100; // bottom
 const int BUTT_VER_T = 50; // top 
-const int B1_HORI_L = 0;
-const int B1_HORI_R = 65;
-const int B2_HORI_L = 65;
-const int B2_HORI_R = 130;
+const int B1_HORI_L = 10;
+const int B1_HORI_R = 60;
+const int B2_HORI_L = 70;
+const int B2_HORI_R = 120;
 const int B3_HORI_L = 130;
-const int B3_HORI_R = 195;
-const int B4_HORI_L = 195;
-const int B4_HORI_R = 260;
-const int B5_HORI_L = 0;
-const int B5_HORI_R = 65;
-const int B6_HORI_L = 195;
-const int B6_HORI_R = 260;
+const int B3_HORI_R = 180;
+const int B4_HORI_L = 190;
+const int B4_HORI_R = 240;
+const int B5_HORI_L = 10;
+const int B5_HORI_R = 50;
+const int B6_HORI_L = 190;
+const int B6_HORI_R = 240;
 //max number of objects to be detected in frame
 const int MAX_NUM_OBJECTS=1;
 //delay between frames, in ms
@@ -97,7 +97,7 @@ const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
 const string W_NAME_FEED = "OM OpenCV - Feed";
 const string W_NAME_THRESHOLD = "Thresholded Image";
 const string W_NAME_HSV = "OM OpenCV - HSV";
-const string LAYOUT_PNG_NAME = "img/layout6xplain.png";
+const string LAYOUT_PNG_NAME = "img/layout6xplaingap.png";
 const string PAUSED_PNG_NAME = "img/paused.png";
 
 enum class TrackStt {NO_TRACK, UNARMED, ARMED, DEBOUNCING, TRIGGER, EXPRESSION};

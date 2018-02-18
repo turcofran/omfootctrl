@@ -87,7 +87,8 @@ class MIDI
 {  
   
 public:
-  MIDI(const string name, const int expressiondiv, const bool verb)  throw(ExMIDI);  
+  MIDI(const string name, const int expressiondiv, const bool verb)  throw(ExMIDI);
+  MIDI(const bool verb) {verbose = verb;jMidiClient=NULL;}; // This is just a constructor provided as a mock 
   ~MIDI();
   bool parseAndSendMess(string arrivedin, cmdmap::command cmdin) throw(ExMIDI);
   
@@ -110,8 +111,7 @@ private:
     MIDI * mp = static_cast<MIDI*>(arg); 
     return mp->jMidiProcess(nframes);
   }
-  
-    
+
 };
 
 #endif 

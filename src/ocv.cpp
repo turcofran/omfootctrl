@@ -102,13 +102,13 @@ OCV::OCV(const int incamdev, const string hsvFilterConfFile, const int expressio
 
 void OCV::printCmdNames(const cmdmap::bank * currentBank) {
   layout6x.copyTo(layout6xcmds);
-  putText(layout6xcmds, currentBank->cmmds_v[0].shortname , Point(B1_HORI_L+15, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
-  putText(layout6xcmds, currentBank->cmmds_v[1].shortname , Point(B2_HORI_L+15, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
-  putText(layout6xcmds, currentBank->cmmds_v[2].shortname , Point(B3_HORI_L+15, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
-  putText(layout6xcmds, currentBank->cmmds_v[3].shortname , Point(B4_HORI_L+15, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
-  putText(layout6xcmds, currentBank->cmmds_v[4].shortname , Point(B5_HORI_L+15, BUTT_VER_T-20 ), 1, 1, Scalar(0,0,0), 2);
-  putText(layout6xcmds, currentBank->cmmds_v[5].shortname , Point(B6_HORI_L+15, BUTT_VER_T-20 ), 1, 1, Scalar(0,0,0), 2);
-  putText(layout6xcmds, currentBank->cmmds_v[6].shortname , Point(EXP_HORI_L+15, FRAME_HEIGHT/2-20 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[0].shortname , Point(B1_HORI_L+5, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[1].shortname , Point(B2_HORI_L+5, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[2].shortname , Point(B3_HORI_L+5, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[3].shortname , Point(B4_HORI_L+5, BUTT_VER_B+40 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[4].shortname , Point(B5_HORI_L+5, BUTT_VER_T-20 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[5].shortname , Point(B6_HORI_L+5, BUTT_VER_T-20 ), 1, 1, Scalar(0,0,0), 2);
+  putText(layout6xcmds, currentBank->cmmds_v[6].shortname , Point(EXP_HORI_L+10, FRAME_HEIGHT/2-20 ), 1, 1, Scalar(0,0,0), 2);
 }
 
 // Process input
@@ -226,25 +226,25 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
           }
           break;
         case TrackStt::ARMED:
-          if (lastPoint.x > EXP_HORI_L) {
+          if (lastPoint.x > EXP_HORI_L && lastPoint.x < EXP_HORI_R) {
             trackState = TrackStt::EXPRESSION;
           }
           else if (lastPoint.y > BUTT_VER_B) {
             trackState = TrackStt::DEBOUNCING;
             debounceCounter = debouceFrames;
-            if (lastPoint.x < B1_HORI_R) {
+            if (lastPoint.x > B1_HORI_L && lastPoint.x < B1_HORI_R) {
               cout << "1" << endl; 
               retValue = "1";
             }
-            else if (lastPoint.x < B2_HORI_R) {
+            else if (lastPoint.x > B2_HORI_L && lastPoint.x < B2_HORI_R) {
               cout << "2" << endl; 
               retValue = "2";
             }
-            else if (lastPoint.x < B3_HORI_R) {
+            else if (lastPoint.x > B3_HORI_L && lastPoint.x < B3_HORI_R) {
               cout << "3" << endl; 
               retValue = "3";
             }
-            else if (lastPoint.x < B4_HORI_R) {
+            else if (lastPoint.x > B4_HORI_L && lastPoint.x < B4_HORI_R) {
               cout << "4" << endl; 
               retValue = "4";
             }
@@ -252,7 +252,7 @@ string OCV::trackAndEval(Mat &threshold, Mat &canvas){
           else if (lastPoint.y < BUTT_VER_T) {
             trackState = TrackStt::DEBOUNCING;
             debounceCounter = debouceFrames;
-            if (lastPoint.x < B5_HORI_R) {
+            if (lastPoint.x > B5_HORI_L && lastPoint.x < B5_HORI_R) {
               cout << "5" << endl; 
               retValue = "5";
             }

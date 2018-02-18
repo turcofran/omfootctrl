@@ -37,6 +37,7 @@ FootController::FootController(const int incamdev, const int  baudrate,
     catch (const ExMIDI &e)
     {
       cerr << "WARNING: " << e.what() << endl;
+      midiDev = new MIDI(verbose); 
     }
     // Create osc device
     oscDev = new OSC(defoscserv, expressiondiv, verbose);

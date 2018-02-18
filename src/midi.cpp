@@ -17,7 +17,7 @@ MIDI::MIDI(const string name, const int expressiondiv, const bool verb)  throw(E
   try
   {
     midiCDBQtt=0;
-    if((jMidiClient = jack_client_open(clientName.c_str(), JackNullOption, NULL)) == 0){
+    if((jMidiClient = jack_client_open(clientName.c_str(), JackNoStartServer, NULL)) == 0){
       throw(ExMIDI("MIDI client cannot be created, JACK server not running?\n"));
     }
     jack_set_process_callback(jMidiClient, _jMidiProcess, this);
@@ -41,6 +41,10 @@ MIDI::~MIDI(void)
 // Parse and send Midi command
 bool MIDI::parseAndSendMess(string arrivedin, cmdmap::command cmdin) throw(ExMIDI)
 {  
+  if(jMidiClient == NULL){
+    cout << "The command " << cmdin.name << " won't be processes since midi client is NULL" << endl;
+    return false;
+  }
   bool sendExpression = false;
   if(!midiCDBQtt){
     // Get command and databytes
