@@ -16,3 +16,6 @@ src/sample.avi
 src/sample/
 src/ut_cmdmap.cpp
 src/_README.txt
+
+# editors
+.*.swp

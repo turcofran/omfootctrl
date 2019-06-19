@@ -32,6 +32,10 @@ endif ()
 #~ find_package(lo REQUIRED )
 # find OpenCV package
 find_package( OpenCV REQUIRED )
+if( OpenCV_FOUND )
+list( APPEND ThirdParty_LIBS ${OpenCV_LIBS} )
+    include_directories( ${OpenCV_INCLUDE_DIRS} )
+endif( OpenCV_FOUND )
 # add the binary tree to the search path for include files so that we will find main_config.h
 include_directories("${PROJECT_BINARY_DIR}")
 
@@ -51,6 +55,7 @@ add_executable( ${CVOM_BIN_NAME} main_config.hpp ominputdev.hpp footcontroller.c
                   ocv.cpp ocv.hpp cmdmap.hpp osc.cpp osc.hpp midi.cpp midi.hpp main.cpp )
 target_link_libraries( ${CVOM_BIN_NAME} ${OpenCV_LIBS} ) 
 target_link_libraries( ${CVOM_BIN_NAME} ${Boost_LIBRARIES} )
+target_link_libraries( ${CVOM_BIN_NAME} lo v4l2 jack )
  
 
 
